@@ -17,7 +17,9 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): CredenceDatabase {
+    fun provideDatabase(
+        @ApplicationContext context: Context
+    ): CredenceDatabase {
         return Room.databaseBuilder(
             context,
             CredenceDatabase::class.java,
@@ -26,7 +28,9 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideTransactionDao(db: CredenceDatabase): TransactionDao {
+    fun provideTransactionDao(
+        db: CredenceDatabase
+    ): TransactionDao {
         return db.transactionDao()
     }
 }
