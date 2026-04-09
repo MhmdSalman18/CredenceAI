@@ -1,4 +1,4 @@
-package com.example.credenceai
+package com.credenceai.app
 
 import org.junit.Test
 
