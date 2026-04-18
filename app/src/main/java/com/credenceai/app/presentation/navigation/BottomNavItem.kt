@@ -10,21 +10,8 @@ sealed class BottomNavItem(
     val label: String,
     val icon: ImageVector
 ) {
-    object Dashboard : BottomNavItem(
-        route = "dashboard",
-        label = "Home",
-        icon = Icons.Default.Home
-    )
-
-    object Transactions : BottomNavItem(
-        route = "transactions",
-        label = "Transactions",
-        icon = Icons.Default.List
-    )
-
-    object Add : BottomNavItem(
-        route = "add_transaction",
-        label = "Add",
-        icon = Icons.Default.Add
-    )
+    object Home : BottomNavItem("home", "Home", Icons.Default.Home)
+    object History : BottomNavItem("history", "History", Icons.Default.List)
+    object Analytics : BottomNavItem("analytics", "Analytics", Icons.Default.AddCircle)
+    object Settings : BottomNavItem("settings", "Settings", Icons.Default.Settings)
 }

@@ -1,13 +1,16 @@
 package com.credenceai.app.presentation.ui.screens
 
+import android.R.attr.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
 import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.dashboard.DashboardScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
+import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -17,9 +20,10 @@ fun MainScreen() {
     val navController = rememberNavController()
 
     val items = listOf(
-        BottomNavItem.Dashboard,
-        BottomNavItem.Transactions,
-        BottomNavItem.Add
+        BottomNavItem.Home,
+        BottomNavItem.History,
+        BottomNavItem.Analytics,
+        BottomNavItem.Settings
     )
 
     Scaffold(
@@ -53,23 +57,14 @@ fun MainScreen() {
 
         NavHost(
             navController = navController,
-            startDestination = ScreenRoutes.Dashboard.route,
-            modifier = androidx.compose.ui.Modifier.padding(padding)
+            startDestination = ScreenRoutes.Home.route,
+            modifier = Modifier.padding(padding)
         ) {
 
-            composable(ScreenRoutes.Dashboard.route) {
-                DashboardScreen(
-                    onNavigateToAdd = {
-                        navController.navigate(ScreenRoutes.AddTransaction.route)
-                    },
-                    onNavigateToTransactions = {
-                        navController.navigate(ScreenRoutes.Transactions.route)
-                    },
-                    onNavigateToUncategorized = {
-                        navController.navigate(ScreenRoutes.Uncategorized.route)
-                    }
-                )
-            }
+
+            composable("history") { TransactionsScreen() }
+            composable("analytics") { TransactionsScreen() }
+            composable("settings") { TransactionsScreen() }
 
             composable(ScreenRoutes.Transactions.route) {
                 TransactionsScreen()
@@ -80,6 +75,9 @@ fun MainScreen() {
             }
             composable(ScreenRoutes.Uncategorized.route) {
                 UncategorizedScreen()
+            }
+            composable(ScreenRoutes.Home.route){
+                HomeScreen()
             }
         }
     }

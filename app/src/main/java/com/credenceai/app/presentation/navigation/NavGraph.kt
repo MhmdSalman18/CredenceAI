@@ -8,6 +8,7 @@ import androidx.navigation.compose.*
 import com.credenceai.app.presentation.ui.screens.dashboard.DashboardScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
+import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
 @Composable
@@ -17,23 +18,14 @@ fun NavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = ScreenRoutes.Dashboard.route
+        startDestination = ScreenRoutes.Home.route
     ) {
 
-        composable(ScreenRoutes.Dashboard.route) {
-            DashboardScreen(
-                onNavigateToAdd = {
-                    navController.navigate(ScreenRoutes.AddTransaction.route)
-                },
-                onNavigateToTransactions = {
-                    navController.navigate(ScreenRoutes.Transactions.route)
-                },
-                onNavigateToUncategorized = {
-                    navController.navigate(ScreenRoutes.Uncategorized.route)
-                }
-            )
-        }
 
+
+        composable(ScreenRoutes.Home.route) {
+            HomeScreen()
+        }
         composable(ScreenRoutes.Transactions.route) {
             TransactionsScreen()
         }
