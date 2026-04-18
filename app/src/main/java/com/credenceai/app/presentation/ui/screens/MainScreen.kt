@@ -8,6 +8,7 @@ import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.dashboard.DashboardScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
+import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +64,9 @@ fun MainScreen() {
                     },
                     onNavigateToTransactions = {
                         navController.navigate(ScreenRoutes.Transactions.route)
+                    },
+                    onNavigateToUncategorized = {
+                        navController.navigate(ScreenRoutes.Uncategorized.route)
                     }
                 )
             }
@@ -73,6 +77,9 @@ fun MainScreen() {
 
             composable(ScreenRoutes.AddTransaction.route) {
                 AddEditTransactionScreen()
+            }
+            composable(ScreenRoutes.Uncategorized.route) {
+                UncategorizedScreen()
             }
         }
     }

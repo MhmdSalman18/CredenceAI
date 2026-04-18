@@ -8,6 +8,7 @@ import androidx.navigation.compose.*
 import com.credenceai.app.presentation.ui.screens.dashboard.DashboardScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
+import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
 @Composable
 fun NavGraph() {
@@ -26,6 +27,9 @@ fun NavGraph() {
                 },
                 onNavigateToTransactions = {
                     navController.navigate(ScreenRoutes.Transactions.route)
+                },
+                onNavigateToUncategorized = {
+                    navController.navigate(ScreenRoutes.Uncategorized.route)
                 }
             )
         }
@@ -36,6 +40,9 @@ fun NavGraph() {
 
         composable(ScreenRoutes.AddTransaction.route) {
             AddEditTransactionScreen()
+        }
+        composable(ScreenRoutes.Uncategorized.route) {
+            UncategorizedScreen()
         }
     }
 }

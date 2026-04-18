@@ -10,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun DashboardScreen(
     onNavigateToAdd: () -> Unit,
     onNavigateToTransactions: () -> Unit,
+    onNavigateToUncategorized: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -24,6 +25,9 @@ fun DashboardScreen(
 
         Button(onClick = onNavigateToTransactions) {
             Text("View Transactions")
+        }
+        Button(onClick = onNavigateToUncategorized) {
+            Text("Uncategorized")
         }
     }
 }

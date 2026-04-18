@@ -37,4 +37,9 @@ object UseCaseModule {
     fun provideUpdateTransactionUseCase(
         repository: TransactionRepository
     ) = UpdateTransactionUseCase(repository)
+
+    @Provides
+    fun provideGetUncategorizedTransactionsUseCase(
+        repository: TransactionRepository
+    ) = GetUncategorizedTransactionsUseCase(repository)
 }
