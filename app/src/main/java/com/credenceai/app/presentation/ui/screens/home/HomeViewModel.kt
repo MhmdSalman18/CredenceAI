@@ -29,21 +29,21 @@ data class CategoryItem(
 // ─── UI State ─────────────────────────────────────────────────────────────────
 
 data class HomeUiState(
-    val netBalance: String        = "\$12,450.80",
-    val changeLabel: String       = "+2.4% from last month",
-    val totalIncome: String       = "\$18,200.00",
-    val totalSpent: String        = "\$5,749.20",
-    val budgetProgress: Float     = 0.68f,
+    val netBalance: String             = "₹12,450.80",
+    val changeLabel: String            = "+2.4% from last month",
+    val totalIncome: String            = "₹18,200.00",
+    val totalSpent: String             = "₹5,749.20",
+    val budgetProgress: Float          = 0.68f,
     val categories: List<CategoryItem> = defaultCategories(),
-    val isLoading: Boolean        = false,
-    val errorMessage: String?     = null
+    val isLoading: Boolean             = false,
+    val errorMessage: String?          = null
 )
 
 private fun defaultCategories() = listOf(
     CategoryItem(
         id           = "food",
         name         = "FOOD",
-        amount       = "\$1,240",
+        amount       = "₹1,240",
         spendPercent = "21.5% of spend",
         icon         = Icons.Default.Restaurant,
         iconTint     = Color(0xFFE07B39)
@@ -51,7 +51,7 @@ private fun defaultCategories() = listOf(
     CategoryItem(
         id           = "shopping",
         name         = "SHOPPING",
-        amount       = "\$890",
+        amount       = "₹890",
         spendPercent = "15.4% of spend",
         icon         = Icons.Default.ShoppingBag,
         iconTint     = Color(0xFF7B5EA7)
@@ -59,7 +59,7 @@ private fun defaultCategories() = listOf(
     CategoryItem(
         id           = "travel",
         name         = "TRAVEL",
-        amount       = "\$2,100",
+        amount       = "₹2,100",
         spendPercent = "36.5% of spend",
         icon         = Icons.Default.Flight,
         iconTint     = Color(0xFF2D9CDB)
@@ -67,7 +67,7 @@ private fun defaultCategories() = listOf(
     CategoryItem(
         id           = "bills",
         name         = "BILLS",
-        amount       = "\$1,519",
+        amount       = "₹1,519",
         spendPercent = "26.6% of spend",
         icon         = Icons.Default.Receipt,
         iconTint     = Color(0xFFE05252)
@@ -95,13 +95,13 @@ class HomeViewModel : ViewModel() {
                 // val summary    = repository.getMonthlySummary()
                 // val categories = repository.getCategoryBreakdown()
                 // _uiState.update { it.copy(
-                //     netBalance    = summary.netBalance.formatCurrency(),
-                //     changeLabel   = summary.changeLabel,
-                //     totalIncome   = summary.income.formatCurrency(),
-                //     totalSpent    = summary.spent.formatCurrency(),
-                //     budgetProgress= summary.budgetUsedFraction,
-                //     categories    = categories.toUiItems(),
-                //     isLoading     = false
+                //     netBalance     = summary.netBalance.formatCurrency(),
+                //     changeLabel    = summary.changeLabel,
+                //     totalIncome    = summary.income.formatCurrency(),
+                //     totalSpent     = summary.spent.formatCurrency(),
+                //     budgetProgress = summary.budgetUsedFraction,
+                //     categories     = categories.toUiItems(),
+                //     isLoading      = false
                 // ) }
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
@@ -112,9 +112,8 @@ class HomeViewModel : ViewModel() {
 
     // ── User actions ──────────────────────────────────────────────────────────
 
-    fun onAddExpense() {
-        // TODO: navigate to Add Expense screen or show bottom sheet
-    }
+    // Navigation to AddExpenseScreen is handled by the onAddExpense lambda
+    // injected from NavGraph into HomeScreen — no navigation logic needed here.
 
     fun onAddIncome() {
         // TODO: navigate to Add Income screen or show bottom sheet

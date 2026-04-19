@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Download
-
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +45,8 @@ private val ActionBorder  = Color(0xFFDDE3F0)
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    onAddExpense: () -> Unit = {}          // ← navigation lambda injected by NavGraph
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -65,7 +65,7 @@ fun HomeScreen(
         ) {
             SummaryCard(uiState = uiState)
             QuickActionsRow(
-                onAddExpense   = viewModel::onAddExpense,
+                onAddExpense   = onAddExpense,               // ← pass nav lambda here
                 onAddIncome    = viewModel::onAddIncome,
                 onExportReport = viewModel::onExportReport
             )
@@ -256,35 +256,20 @@ private fun CategoriesSection(
     onViewAll: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        // Header row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Categories",
-                color = TextDark,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Categories", color = TextDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             TextButton(onClick = onViewAll, contentPadding = PaddingValues(0.dp)) {
-                Text(
-                    text = "View All",
-                    color = CardBlueStart,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = "View All", color = CardBlueStart, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
-        // 2-column grid built from chunked list
         val rows = categories.chunked(2)
         rows.forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowItems.forEach { item ->
                     CategoryCard(item = item, modifier = Modifier.weight(1f))
                 }
@@ -303,48 +288,21 @@ private fun CategoryCard(item: CategoryItem, modifier: Modifier = Modifier) {
         shadowElevation = 1.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, ActionBorder)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Tinted icon box
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(
-                        color = item.iconTint.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
+                    .background(color = item.iconTint.copy(alpha = 0.12f), shape = RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.name,
-                    tint = item.iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(imageVector = item.icon, contentDescription = item.name,
+                    tint = item.iconTint, modifier = Modifier.size(20.dp))
             }
-
-            Text(
-                text = item.name,
-                color = TextGray,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp
-            )
-
+            Text(text = item.name, color = TextGray, fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = item.amount,
-                    color = TextDark,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = item.spendPercent,
-                    color = TextGray,
-                    fontSize = 12.sp
-                )
+                Text(text = item.amount, color = TextDark, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(text = item.spendPercent, color = TextGray, fontSize = 12.sp)
             }
         }
     }
