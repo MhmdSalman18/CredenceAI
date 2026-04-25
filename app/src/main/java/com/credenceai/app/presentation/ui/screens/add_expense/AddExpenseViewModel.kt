@@ -1,11 +1,17 @@
 package com.credenceai.app.presentation.ui.screens.add_expense
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.credenceai.app.domain.model.Transaction
+import com.credenceai.app.domain.usecase.AddTransactionUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.net.URI
+import javax.inject.Inject
 
 data class AddExpenseUiState(
     val amount: String = "",
@@ -41,7 +47,10 @@ val paymentModes = listOf(
     "Wallet"
 )
 
-class AddExpenseViewModel : ViewModel() {
+@HiltViewModel
+class AddExpenseViewModel @Inject constructor(
+    private val addTransactionUseCase: AddTransactionUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddExpenseUiState())
     val uiState: StateFlow<AddExpenseUiState> = _uiState.asStateFlow()
@@ -90,9 +99,28 @@ class AddExpenseViewModel : ViewModel() {
             _uiState.update { it.copy(errorMessage = "Please select a category") }
             return
         }
+
         _uiState.update { it.copy(isSaving = true, errorMessage = null) }
-        // TODO: Inject and call repository to save transaction
-        _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
+
+        viewModelScope.launch {
+            try {
+                val transaction = Transaction(
+                    amount = state.amount.toDoubleOrNull() ?: 0.0,
+                    type = "debit",
+                    merchant = state.merchantName,
+                    dateTime = System.currentTimeMillis(), // TODO: use selected date time
+                    category = state.category,
+                    source = "MANUAL",
+                    note = state.notes,
+                    paymentMode = state.paymentMode,
+                    referenceId = null
+                )
+                addTransactionUseCase(transaction)
+                _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isSaving = false, errorMessage = e.message ?: "Failed to save transaction") }
+            }
+        }
     }
 
     fun onErrorDismissed() {

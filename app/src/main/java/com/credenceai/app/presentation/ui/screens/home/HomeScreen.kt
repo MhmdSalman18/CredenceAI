@@ -25,8 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ private val ActionBorder  = Color(0xFFDDE3F0)
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
     onAddExpense: () -> Unit = {}          // ← navigation lambda injected by NavGraph
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

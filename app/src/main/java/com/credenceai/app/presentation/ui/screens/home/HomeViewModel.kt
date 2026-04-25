@@ -9,11 +9,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import java.util.Locale
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -29,94 +32,84 @@ data class CategoryItem(
 // ─── UI State ─────────────────────────────────────────────────────────────────
 
 data class HomeUiState(
-    val netBalance: String             = "₹12,450.80",
-    val changeLabel: String            = "+2.4% from last month",
-    val totalIncome: String            = "₹18,200.00",
-    val totalSpent: String             = "₹5,749.20",
-    val budgetProgress: Float          = 0.68f,
-    val categories: List<CategoryItem> = defaultCategories(),
+    val netBalance: String             = "₹0.00",
+    val changeLabel: String            = "No changes this month",
+    val totalIncome: String            = "₹0.00",
+    val totalSpent: String             = "₹0.00",
+    val budgetProgress: Float          = 0.0f,
+    val categories: List<CategoryItem> = emptyList(),
     val isLoading: Boolean             = false,
     val errorMessage: String?          = null
 )
 
-private fun defaultCategories() = listOf(
-    CategoryItem(
-        id           = "food",
-        name         = "FOOD",
-        amount       = "₹1,240",
-        spendPercent = "21.5% of spend",
-        icon         = Icons.Default.Restaurant,
-        iconTint     = Color(0xFFE07B39)
-    ),
-    CategoryItem(
-        id           = "shopping",
-        name         = "SHOPPING",
-        amount       = "₹890",
-        spendPercent = "15.4% of spend",
-        icon         = Icons.Default.ShoppingBag,
-        iconTint     = Color(0xFF7B5EA7)
-    ),
-    CategoryItem(
-        id           = "travel",
-        name         = "TRAVEL",
-        amount       = "₹2,100",
-        spendPercent = "36.5% of spend",
-        icon         = Icons.Default.Flight,
-        iconTint     = Color(0xFF2D9CDB)
-    ),
-    CategoryItem(
-        id           = "bills",
-        name         = "BILLS",
-        amount       = "₹1,519",
-        spendPercent = "26.6% of spend",
-        icon         = Icons.Default.Receipt,
-        iconTint     = Color(0xFFE05252)
-    )
-)
-
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val getAllTransactionsUseCase: GetAllTransactionsUseCase
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = getAllTransactionsUseCase()
+        .map { transactions ->
+            val totalIncome = transactions.filter { it.type.lowercase() == "credit" || it.type.lowercase() == "income" }.sumOf { it.amount }
+            val totalSpent = transactions.filter { it.type.lowercase() == "debit" || it.type.lowercase() == "expense" }.sumOf { it.amount }
+            val netBalance = totalIncome - totalSpent
+            
+            val categoryGroups = transactions
+                .filter { it.type.lowercase() == "debit" || it.type.lowercase() == "expense" }
+                .groupBy { it.category ?: "OTHERS" }
+            
+            val categories = categoryGroups.map { (categoryName, categoryTransactions) ->
+                val categoryAmount = categoryTransactions.sumOf { it.amount }
+                val percent = if (totalSpent > 0) (categoryAmount / totalSpent * 100) else 0.0
+                CategoryItem(
+                    id = categoryName.lowercase(),
+                    name = categoryName.uppercase(),
+                    amount = "₹%.2f".format(Locale.getDefault(), categoryAmount),
+                    spendPercent = "%.1f%% of spend".format(Locale.getDefault(), percent),
+                    icon = getIconForCategory(categoryName),
+                    iconTint = getColorForCategory(categoryName)
+                )
+            }
 
-    init {
-        loadSummary()
+            HomeUiState(
+                netBalance = "₹%.2f".format(Locale.getDefault(), netBalance),
+                totalIncome = "₹%.2f".format(Locale.getDefault(), totalIncome),
+                totalSpent = "₹%.2f".format(Locale.getDefault(), totalSpent),
+                budgetProgress = if (totalIncome > 0) (totalSpent / totalIncome).toFloat().coerceIn(0f, 1f) else 0f,
+                categories = categories.sortedByDescending { it.amount.replace("₹", "").replace(",", "").toDoubleOrNull() ?: 0.0 },
+                isLoading = false
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState(isLoading = true)
+        )
+
+    private fun getIconForCategory(category: String): ImageVector {
+        return when (category.uppercase()) {
+            "FOOD", "FOOD & DINING" -> Icons.Default.Restaurant
+            "SHOPPING" -> Icons.Default.ShoppingBag
+            "TRAVEL" -> Icons.Default.Flight
+            "BILLS", "BILLS & UTILITIES" -> Icons.Default.Receipt
+            else -> Icons.Default.Receipt
+        }
     }
 
-    // ── Data loading ──────────────────────────────────────────────────────────
-
-    private fun loadSummary() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                // TODO: replace with real repository calls
-                // val summary    = repository.getMonthlySummary()
-                // val categories = repository.getCategoryBreakdown()
-                // _uiState.update { it.copy(
-                //     netBalance     = summary.netBalance.formatCurrency(),
-                //     changeLabel    = summary.changeLabel,
-                //     totalIncome    = summary.income.formatCurrency(),
-                //     totalSpent     = summary.spent.formatCurrency(),
-                //     budgetProgress = summary.budgetUsedFraction,
-                //     categories     = categories.toUiItems(),
-                //     isLoading      = false
-                // ) }
-                _uiState.update { it.copy(isLoading = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
-            }
+    private fun getColorForCategory(category: String): Color {
+        return when (category.uppercase()) {
+            "FOOD", "FOOD & DINING" -> Color(0xFFE07B39)
+            "SHOPPING" -> Color(0xFF7B5EA7)
+            "TRAVEL" -> Color(0xFF2D9CDB)
+            "BILLS", "BILLS & UTILITIES" -> Color(0xFFE05252)
+            else -> Color(0xFF8A94A6)
         }
     }
 
     // ── User actions ──────────────────────────────────────────────────────────
 
-    // Navigation to AddExpenseScreen is handled by the onAddExpense lambda
-    // injected from NavGraph into HomeScreen — no navigation logic needed here.
-
     fun onAddIncome() {
-        // TODO: navigate to Add Income screen or show bottom sheet
+        // TODO: navigate to Add Income screen
     }
 
     fun onExportReport() {
@@ -128,6 +121,5 @@ class HomeViewModel : ViewModel() {
     }
 
     fun dismissError() {
-        _uiState.update { it.copy(errorMessage = null) }
     }
 }

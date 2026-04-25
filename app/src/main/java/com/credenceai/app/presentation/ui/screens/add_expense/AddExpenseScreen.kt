@@ -22,8 +22,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 // ─── Brand Colors ───────────────────────────────────────────────────────────
 private val PrimaryBlue   = Color(0xFF1A3A8F)
@@ -37,7 +37,7 @@ private val ErrorRed      = Color(0xFFD94040)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
-    viewModel: AddExpenseViewModel = viewModel(),
+    viewModel: AddExpenseViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
     onSaveSuccess: () -> Unit = {}
 ) {
