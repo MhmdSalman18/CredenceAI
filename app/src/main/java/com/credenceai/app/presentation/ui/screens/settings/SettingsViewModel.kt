@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.update
 
 data class UserProfile(
     val name: String  = "Julian Sinclair",
-    val email: String = "julian.sinclair@wealth.private",
     val avatarUrl: String? = null
 )
 
@@ -21,8 +20,8 @@ data class SettingsUiState(
 
     // App Preferences
     val isDarkMode: Boolean       = false,
-    val currency: String          = "USD (\$)",
-    val language: String          = "English (US)",
+    val currency: String          = "INR (₹)",
+    val language: String          = "English (IN)",
 
     // Notifications
     val transactionAlerts: Boolean = true,
@@ -37,12 +36,14 @@ data class SettingsUiState(
     val appLockEnabled: Boolean = true,
 
     // App info
-    val appVersion: String = "v2.4.0 (Gold)",
+    val appVersion: String = "v1.0.0",
 
     // Dialogs
     val showClearDataDialog: Boolean  = false,
     val showCurrencyPicker: Boolean   = false,
     val showLanguagePicker: Boolean   = false,
+    val showEditNameDialog: Boolean   = false,
+    val tempName: String              = ""
 )
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
@@ -51,6 +52,29 @@ class SettingsViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    // ── Profile ───────────────────────────────────────────────────────────────
+
+    fun onEditNameClick() {
+        _uiState.update { it.copy(showEditNameDialog = true, tempName = it.profile.name) }
+    }
+
+    fun onTempNameChange(newName: String) {
+        _uiState.update { it.copy(tempName = newName) }
+    }
+
+    fun onSaveName() {
+        _uiState.update { 
+            it.copy(
+                profile = it.profile.copy(name = it.tempName),
+                showEditNameDialog = false
+            ) 
+        }
+    }
+
+    fun onEditNameDismissed() {
+        _uiState.update { it.copy(showEditNameDialog = false) }
+    }
 
     // ── App Preferences ───────────────────────────────────────────────────────
 

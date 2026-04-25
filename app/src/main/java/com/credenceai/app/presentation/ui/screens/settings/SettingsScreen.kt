@@ -45,6 +45,33 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // ── Edit Name Dialog ──────────────────────────────────────────────────
+    if (uiState.showEditNameDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::onEditNameDismissed,
+            title = { Text("Edit Name", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = uiState.tempName,
+                    onValueChange = viewModel::onTempNameChange,
+                    label = { Text("Display Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::onSaveName) {
+                    Text("Save", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::onEditNameDismissed) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     // ── Clear Data Confirmation Dialog ────────────────────────────────────
     if (uiState.showClearDataDialog) {
         AlertDialog(
@@ -94,35 +121,54 @@ fun SettingsScreen(
             )
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Avatar
-                Box(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Avatar
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.20f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            uiState.profile.name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            "Standard Plan",
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.75f)
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = viewModel::onEditNameClick,
                     modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.20f)),
-                    contentAlignment = Alignment.Center
+                        .background(Color.White.copy(alpha = 0.15f), CircleShape)
                 ) {
                     Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
+                        Icons.Default.Edit,
+                        contentDescription = "Edit Name",
                         tint = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        uiState.profile.name,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        uiState.profile.email,
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.75f)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
