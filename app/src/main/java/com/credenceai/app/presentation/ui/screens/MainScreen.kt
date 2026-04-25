@@ -81,6 +81,8 @@ fun MainScreen() {
         else -> "CredenceAI"
     }
 
+    val showLogo = currentRoute == BottomNavItem.Home.route || currentRoute == ScreenRoutes.Home.route
+
     val backgroundColor = Color(0xFFF5F6FA)
 
     Scaffold(
@@ -89,14 +91,16 @@ fun MainScreen() {
                 TopAppBar(
                     title = { Text(topBarTitle) },
                     navigationIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.app_logo),
-                            contentDescription = "App Logo",
-                            modifier = Modifier
-                                .padding(start = 12.dp)
-                                .size(32.dp),
-                            tint = Color.Unspecified
-                        )
+                        if (showLogo) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "App Logo",
+                                modifier = Modifier
+                                    .padding(start = 12.dp)
+                                    .size(32.dp),
+                                tint = Color.Unspecified
+                            )
+                        }
                     },
                     actions = {
                         IconButton(onClick = { showDatePicker = true }) {

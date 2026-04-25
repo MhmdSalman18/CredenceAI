@@ -75,22 +75,11 @@ fun AddExpenseScreen(
                     )
                 },
                 navigationIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary
-                            )
-                        }
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
-                            painter = painterResource(id = R.drawable.app_logo),
-                            contentDescription = "App Logo",
-                            modifier = Modifier.size(32.dp),
-                            tint = Color.Unspecified
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary
                         )
                     }
                 },
