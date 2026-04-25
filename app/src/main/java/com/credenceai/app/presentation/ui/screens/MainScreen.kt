@@ -8,6 +8,7 @@ import androidx.navigation.compose.*
 import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
+import com.credenceai.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
@@ -84,7 +85,7 @@ fun MainScreen() {
             composable(ScreenRoutes.Uncategorized.route) { UncategorizedScreen() }
 
             composable("history")   { HistoryScreen() }
-            composable("analytics") { TransactionsScreen() }
+            composable("analytics") { AnalyticsScreen() }
             composable("settings")  { TransactionsScreen() }
         }
     }
