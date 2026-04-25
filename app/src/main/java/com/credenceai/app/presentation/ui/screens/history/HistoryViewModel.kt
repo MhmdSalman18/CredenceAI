@@ -5,10 +5,13 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import androidx.lifecycle.viewModelScope
+import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import java.text.SimpleDateFormat
+import java.util.*
+import javax.inject.Inject
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -53,138 +56,121 @@ data class HistoryUiState(
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
-class HistoryViewModel : ViewModel() {
+@HiltViewModel
+class HistoryViewModel @Inject constructor(
+    private val getAllTransactionsUseCase: GetAllTransactionsUseCase
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HistoryUiState())
-    val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
+    private val _searchQuery = MutableStateFlow("")
+    private val _activeFilter = MutableStateFlow(TransactionFilter.ALL)
 
-    private val allGroups = listOf(
-        TransactionGroup(
-            dateLabel = "TODAY",
-            transactions = listOf(
-                TransactionItem(
-                    id              = "1",
-                    merchantName    = "Unknown Merchant 042",
-                    category        = "UNCATEGORIZED",
-                    isUncategorized = true,
-                    time            = "10:42 AM",
-                    amount          = "- ₹42.50",
-                    isCredit        = false,
-                    icon            = Icons.Default.QuestionMark,
-                    iconTint        = Color(0xFFE05252),
-                    iconBackground  = Color(0xFFFDECEC)
-                ),
-                TransactionItem(
-                    id             = "2",
-                    merchantName   = "Apple Store",
-                    category       = "SHOPPING",
-                    time           = "09:15 AM",
-                    amount         = "- ₹1,299.00",
-                    isCredit       = false,
-                    icon           = Icons.Default.ShoppingBag,
-                    iconTint       = Color(0xFF2D5BE3),
-                    iconBackground = Color(0xFFE8EEFB)
+    val uiState: StateFlow<HistoryUiState> = combine(
+        getAllTransactionsUseCase(),
+        _searchQuery,
+        _activeFilter
+    ) { transactions, query, filter ->
+        val filteredTransactions = transactions.filter { tx ->
+            val matchesQuery = query.isEmpty() ||
+                    tx.merchant?.lowercase()?.contains(query.lowercase()) == true ||
+                    tx.category?.lowercase()?.contains(query.lowercase()) == true
+            
+            val matchesFilter = when (filter) {
+                TransactionFilter.ALL      -> true
+                TransactionFilter.DEBIT    -> tx.type.lowercase() == "debit"
+                TransactionFilter.CREDIT   -> tx.type.lowercase() == "credit"
+                TransactionFilter.FOOD     -> tx.category?.uppercase() == "FOOD" || tx.category?.uppercase() == "FOOD & DINING"
+                TransactionFilter.SHOPPING -> tx.category?.uppercase() == "SHOPPING"
+                TransactionFilter.TRAVEL   -> tx.category?.uppercase() == "TRAVEL"
+                TransactionFilter.TRANSFER -> tx.category?.uppercase() == "TRANSFER"
+            }
+            matchesQuery && matchesFilter
+        }
+
+        val groups = filteredTransactions
+            .sortedByDescending { it.dateTime }
+            .groupBy { formatDate(it.dateTime) }
+            .map { (date, txs) ->
+                TransactionGroup(
+                    dateLabel = date,
+                    transactions = txs.map { it.toUiItem() }
                 )
-            )
-        ),
-        TransactionGroup(
-            dateLabel = "YESTERDAY",
-            transactions = listOf(
-                TransactionItem(
-                    id             = "3",
-                    merchantName   = "Salary Deposit",
-                    category       = "TRANSFER",
-                    time           = "4:00 PM",
-                    amount         = "+ ₹4,500.00",
-                    isCredit       = true,
-                    icon           = Icons.Default.AccountBalance,
-                    iconTint       = Color(0xFF27AE60),
-                    iconBackground = Color(0xFFE8F8EF)
-                ),
-                TransactionItem(
-                    id             = "4",
-                    merchantName   = "Delta Airlines",
-                    category       = "TRAVEL",
-                    time           = "1:20 PM",
-                    amount         = "- ₹340.00",
-                    isCredit       = false,
-                    icon           = Icons.Default.Flight,
-                    iconTint       = Color(0xFF2D9CDB),
-                    iconBackground = Color(0xFFE7F5FC)
-                )
-            )
-        ),
-        TransactionGroup(
-            dateLabel = "APR 20",
-            transactions = listOf(
-                TransactionItem(
-                    id             = "5",
-                    merchantName   = "Zomato",
-                    category       = "FOOD",
-                    time           = "8:30 PM",
-                    amount         = "- ₹650.00",
-                    isCredit       = false,
-                    icon           = Icons.Default.Restaurant,
-                    iconTint       = Color(0xFFE07B39),
-                    iconBackground = Color(0xFFFAF0E8)
-                ),
-                TransactionItem(
-                    id             = "6",
-                    merchantName   = "Netflix",
-                    category       = "ENTERTAINMENT",
-                    time           = "12:00 PM",
-                    amount         = "- ₹499.00",
-                    isCredit       = false,
-                    icon           = Icons.Default.Tv,
-                    iconTint       = Color(0xFF7B5EA7),
-                    iconBackground = Color(0xFFF0EBF8)
-                )
-            )
+            }
+
+        HistoryUiState(
+            searchQuery = query,
+            activeFilter = filter,
+            filteredGroups = groups,
+            isLoading = false
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = HistoryUiState(isLoading = true)
     )
 
-    init {
-        _uiState.update { it.copy(groups = allGroups, filteredGroups = allGroups) }
-    }
-
     fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-        applyFilters()
+        _searchQuery.value = query
     }
 
     fun onFilterChange(filter: TransactionFilter) {
-        _uiState.update { it.copy(activeFilter = filter) }
-        applyFilters()
+        _activeFilter.value = filter
     }
 
-    fun onAddTransactionClick() {
-        // TODO: navigate to AddExpense
-    }
-
-    private fun applyFilters() {
-        val state = _uiState.value
-        val query = state.searchQuery.trim().lowercase()
-        val filter = state.activeFilter
-
-        val result = allGroups.mapNotNull { group ->
-            val filtered = group.transactions.filter { tx ->
-                val matchesQuery = query.isEmpty() ||
-                        tx.merchantName.lowercase().contains(query) ||
-                        tx.category.lowercase().contains(query)
-                val matchesFilter = when (filter) {
-                    TransactionFilter.ALL      -> true
-                    TransactionFilter.DEBIT    -> !tx.isCredit
-                    TransactionFilter.CREDIT   -> tx.isCredit
-                    TransactionFilter.FOOD     -> tx.category == "FOOD"
-                    TransactionFilter.SHOPPING -> tx.category == "SHOPPING"
-                    TransactionFilter.TRAVEL   -> tx.category == "TRAVEL"
-                    TransactionFilter.TRANSFER -> tx.category == "TRANSFER"
-                }
-                matchesQuery && matchesFilter
-            }
-            if (filtered.isEmpty()) null else group.copy(transactions = filtered)
+    private fun formatDate(timestamp: Long): String {
+        val calendar = Calendar.getInstance()
+        val today = Calendar.getInstance()
+        val yesterday = Calendar.getInstance().apply { add(Calendar.DATE, -1) }
+        
+        calendar.timeInMillis = timestamp
+        
+        return when {
+            isSameDay(calendar, today) -> "TODAY"
+            isSameDay(calendar, yesterday) -> "YESTERDAY"
+            else -> SimpleDateFormat("MMM dd", Locale.getDefault()).format(calendar.time).uppercase()
         }
+    }
 
-        _uiState.update { it.copy(filteredGroups = result) }
+    private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun com.credenceai.app.domain.model.Transaction.toUiItem(): TransactionItem {
+        val isCredit = type.lowercase() == "credit" || type.lowercase() == "income"
+        val categoryName = category ?: "UNCATEGORIZED"
+        return TransactionItem(
+            id = id.toString(),
+            merchantName = merchant ?: "Unknown",
+            category = categoryName.uppercase(),
+            isUncategorized = category == null || category.isEmpty(),
+            time = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(dateTime)),
+            amount = "${if (isCredit) "+" else "-"} ₹${String.format(Locale.getDefault(), "%.2f", amount)}",
+            isCredit = isCredit,
+            icon = getIconForCategory(categoryName),
+            iconTint = getColorForCategory(categoryName),
+            iconBackground = getColorForCategory(categoryName).copy(alpha = 0.1f)
+        )
+    }
+
+    private fun getIconForCategory(category: String): ImageVector {
+        return when (category.uppercase()) {
+            "FOOD", "FOOD & DINING" -> Icons.Default.Restaurant
+            "SHOPPING" -> Icons.Default.ShoppingBag
+            "TRAVEL" -> Icons.Default.Flight
+            "BILLS", "BILLS & UTILITIES" -> Icons.Default.Receipt
+            "TRANSFER" -> Icons.Default.AccountBalance
+            else -> if (category.isEmpty()) Icons.Default.QuestionMark else Icons.Default.Receipt
+        }
+    }
+
+    private fun getColorForCategory(category: String): Color {
+        return when (category.uppercase()) {
+            "FOOD", "FOOD & DINING" -> Color(0xFFE07B39)
+            "SHOPPING" -> Color(0xFF7B5EA7)
+            "TRAVEL" -> Color(0xFF2D9CDB)
+            "BILLS", "BILLS & UTILITIES" -> Color(0xFFE05252)
+            "TRANSFER" -> Color(0xFF27AE60)
+            else -> Color(0xFF8A94A6)
+        }
     }
 }

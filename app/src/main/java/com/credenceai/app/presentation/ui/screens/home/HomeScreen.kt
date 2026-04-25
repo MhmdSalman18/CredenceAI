@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -194,11 +195,11 @@ private fun QuickActionsRow(
     onExportReport: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Add,
+        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Remove,
             label = "ADD\nEXPENSE", iconTint = CardBlueStart,
             borderColor = CardBlueStart.copy(alpha = 0.4f), onClick = onAddExpense, isPrimary = true)
-        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.AttachMoney,
-            label = "ADD INCOME", iconTint = Color(0xFF27AE60),
+        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Add,
+            label = "ADD\nINCOME", iconTint = Color(0xFF27AE60),
             borderColor = ActionBorder, onClick = onAddIncome)
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Download,
             label = "EXPORT\nREPORT", iconTint = Color(0xFF2D5BE3),

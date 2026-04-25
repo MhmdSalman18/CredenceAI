@@ -21,12 +21,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.credenceai.app.R
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
@@ -43,282 +45,306 @@ private val InsightGold    = Color(0xFFFFD700)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGray)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // ── Page Header ───────────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(horizontal = 20.dp)
-                .padding(top = 20.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Analytics", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(
-                "Review your financial health for the current period.",
-                fontSize = 13.sp, color = TextSecondary, lineHeight = 18.sp
-            )
-
-            // Period selector row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.White,
-                    border = ButtonDefaults.outlinedButtonBorder,
-                    modifier = Modifier.wrapContentWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(uiState.selectedPeriod, fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium, color = TextPrimary)
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null,
-                            tint = TextSecondary, modifier = Modifier.size(16.dp))
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(PrimaryBlue, RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filter",
-                        tint = Color.White, modifier = Modifier.size(18.dp))
-                }
-            }
-        }
-
-        // ── Uncategorized Banner ──────────────────────────────────────────
-        if (uiState.showUncategorizedBanner) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(14.dp),
-                color = LightBlue
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Box(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Analytics") },
+                navigationIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.app_logo),
+                        contentDescription = "App Logo",
                         modifier = Modifier
-                            .size(38.dp)
-                            .background(BrightBlue.copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.HelpOutline, contentDescription = null,
-                            tint = BrightBlue, modifier = Modifier.size(20.dp))
-                    }
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Uncategorized Activity", fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                        Text(
-                            "You have ${uiState.uncategorizedCount} new transactions that need classification.",
-                            fontSize = 12.sp, color = PrimaryBlue.copy(alpha = 0.75f), lineHeight = 16.sp
+                            .padding(start = 12.dp)
+                            .size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "Change Date"
                         )
                     }
-                    Button(
-                        onClick = viewModel::onReviewUncategorized,
-                        colors = ButtonDefaults.buttonColors(containerColor = BrightBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text("Review\nNow", fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-                            color = Color.White, lineHeight = 14.sp)
-                    }
-                }
-            }
-        }
-
-        // ── Summary Card ──────────────────────────────────────────────────
-        Surface(
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundGray
+                )
+            )
+        },
+        containerColor = BackgroundGray
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            shadowElevation = 1.dp
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                SummaryRow(
-                    label       = "INCOME",
-                    amount      = uiState.income,
-                    change      = uiState.incomeChange,
-                    isPositive  = uiState.incomePositive,
-                    amountColor = CreditGreen
-                )
-                HorizontalDivider(color = DividerGray)
-                SummaryRow(
-                    label       = "EXPENSES",
-                    amount      = uiState.expenses,
-                    change      = uiState.expensesChange,
-                    isPositive  = uiState.expensesPositive,
-                    amountColor = DebitRed
-                )
-                HorizontalDivider(color = DividerGray)
-                SummaryRow(
-                    label       = "SAVINGS",
-                    amount      = uiState.savings,
-                    change      = uiState.savingsRate,
-                    isPositive  = true,
-                    amountColor = BrightBlue
-                )
-            }
-        }
-
-        // ── Financial Insight Card ────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.linearGradient(listOf(Color(0xFF2D5BE3), Color(0xFF1A3A8F)))
-                )
-                .padding(20.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null,
-                        tint = InsightGold, modifier = Modifier.size(16.dp))
-                    Text("Financial Insight", fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
-                }
-                Text(uiState.insightTitle, fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 24.sp)
-                Text(uiState.insightBody, fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.75f), lineHeight = 18.sp)
-                Spacer(Modifier.height(2.dp))
-                Button(
-                    onClick = viewModel::onAnalyzeInsight,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.20f)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(uiState.insightAction, fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold, color = Color.White)
-                }
-            }
-        }
-
-        // ── Spending Trend ────────────────────────────────────────────────
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            shadowElevation = 1.dp
-        ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Spending Trend", fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold, color = TextPrimary)
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.size(8.dp).background(BrightBlue, CircleShape))
-                        Text("Expenses", fontSize = 11.sp, color = TextSecondary)
-                    }
-                }
-                SpendingTrendChart(
-                    points = uiState.spendingPoints,
-                    modifier = Modifier.fillMaxWidth().height(140.dp)
-                )
-                // X-axis labels
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    uiState.spendingPoints.forEach { pt ->
-                        Text(pt.label, fontSize = 9.sp, color = TextSecondary)
-                    }
-                }
-            }
-        }
-
-        // ── Category Breakdown ────────────────────────────────────────────
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            shadowElevation = 1.dp
-        ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Category Breakdown", fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold, color = TextPrimary)
+            // ── Page Header (Filters) ──────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Period selector row
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DonutChart(
-                        slices = uiState.categorySlices,
-                        centerLabel = "Total\n${uiState.totalSpendLabel}",
-                        modifier = Modifier.size(130.dp)
-                    )
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        uiState.categorySlices.forEach { slice ->
-                            LegendItem(slice)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color.White,
+                        border = ButtonDefaults.outlinedButtonBorder,
+                        modifier = Modifier.wrapContentWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(uiState.selectedPeriod, fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium, color = TextPrimary)
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null,
+                                tint = TextSecondary, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(PrimaryBlue, RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.FilterList, contentDescription = "Filter",
+                            tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+
+            // ── Uncategorized Banner ──────────────────────────────────────────
+            if (uiState.showUncategorizedBanner) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = LightBlue
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(BrightBlue.copy(alpha = 0.15f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.HelpOutline, contentDescription = null,
+                                tint = BrightBlue, modifier = Modifier.size(20.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text("Uncategorized Activity", fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                            Text(
+                                "You have ${uiState.uncategorizedCount} new transactions that need classification.",
+                                fontSize = 12.sp, color = PrimaryBlue.copy(alpha = 0.75f), lineHeight = 16.sp
+                            )
+                        }
+                        Button(
+                            onClick = viewModel::onReviewUncategorized,
+                            colors = ButtonDefaults.buttonColors(containerColor = BrightBlue),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Review\nNow", fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                                color = Color.White, lineHeight = 14.sp)
                         }
                     }
                 }
             }
-        }
 
-        // ── Top Merchants ─────────────────────────────────────────────────
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            shadowElevation = 1.dp
-        ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Top Merchants", fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold, color = TextPrimary)
-                    TextButton(
-                        onClick = viewModel::onViewAllMerchants,
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text("View List ", fontSize = 13.sp, color = BrightBlue,
-                            fontWeight = FontWeight.SemiBold)
-                        Icon(Icons.Default.ChevronRight, contentDescription = null,
-                            tint = BrightBlue, modifier = Modifier.size(16.dp))
-                    }
-                }
-                uiState.topMerchants.forEachIndexed { index, merchant ->
-                    if (index > 0) HorizontalDivider(color = DividerGray)
-                    MerchantRow(merchant)
+            // ── Summary Card ──────────────────────────────────────────────────
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SummaryRow(
+                        label       = "INCOME",
+                        amount      = uiState.income,
+                        change      = uiState.incomeChange,
+                        isPositive  = uiState.incomePositive,
+                        amountColor = CreditGreen
+                    )
+                    HorizontalDivider(color = DividerGray)
+                    SummaryRow(
+                        label       = "EXPENSES",
+                        amount      = uiState.expenses,
+                        change      = uiState.expensesChange,
+                        isPositive  = uiState.expensesPositive,
+                        amountColor = DebitRed
+                    )
+                    HorizontalDivider(color = DividerGray)
+                    SummaryRow(
+                        label       = "SAVINGS",
+                        amount      = uiState.savings,
+                        change      = uiState.savingsRate,
+                        isPositive  = true,
+                        amountColor = BrightBlue
+                    )
                 }
             }
-        }
 
-        Spacer(Modifier.height(24.dp))
+            // ── Financial Insight Card ────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFF2D5BE3), Color(0xFF1A3A8F)))
+                    )
+                    .padding(20.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null,
+                            tint = InsightGold, modifier = Modifier.size(16.dp))
+                        Text("Financial Insight", fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
+                    }
+                    Text(uiState.insightTitle, fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 24.sp)
+                    Text(uiState.insightBody, fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.75f), lineHeight = 18.sp)
+                    Spacer(Modifier.height(2.dp))
+                    Button(
+                        onClick = viewModel::onAnalyzeInsight,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.20f)),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(uiState.insightAction, fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold, color = Color.White)
+                    }
+                }
+            }
+
+            // ── Spending Trend ────────────────────────────────────────────────
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("Spending Trend", fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.size(8.dp).background(BrightBlue, CircleShape))
+                            Text("Expenses", fontSize = 11.sp, color = TextSecondary)
+                        }
+                    }
+                    SpendingTrendChart(
+                        points = uiState.spendingPoints,
+                        modifier = Modifier.fillMaxWidth().height(140.dp)
+                    )
+                    // X-axis labels
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        uiState.spendingPoints.forEach { pt ->
+                            Text(pt.label, fontSize = 9.sp, color = TextSecondary)
+                        }
+                    }
+                }
+            }
+
+            // ── Category Breakdown ────────────────────────────────────────────
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Category Breakdown", fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        DonutChart(
+                            slices = uiState.categorySlices,
+                            centerLabel = "Total\n${uiState.totalSpendLabel}",
+                            modifier = Modifier.size(130.dp)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            uiState.categorySlices.forEach { slice ->
+                                LegendItem(slice)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Top Merchants ─────────────────────────────────────────────────
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("Top Merchants", fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold, color = TextPrimary)
+                        TextButton(
+                            onClick = viewModel::onViewAllMerchants,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("View List ", fontSize = 13.sp, color = BrightBlue,
+                                fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.ChevronRight, contentDescription = null,
+                                tint = BrightBlue, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    uiState.topMerchants.forEachIndexed { index, merchant ->
+                        if (index > 0) HorizontalDivider(color = DividerGray)
+                        MerchantRow(merchant)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+        }
     }
 }
 

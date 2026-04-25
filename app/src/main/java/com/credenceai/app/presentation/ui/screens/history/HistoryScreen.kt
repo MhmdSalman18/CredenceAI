@@ -17,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.credenceai.app.R
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
@@ -35,19 +37,77 @@ private val CreditGreen    = Color(0xFF27AE60)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
-    onAddExpense: () -> Unit = {}
+    onAddExpense: () -> Unit = {},
+    onAddIncome: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGray)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("History") },
+                navigationIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.app_logo),
+                        contentDescription = "App Logo",
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .size(32.dp),
+                        tint = Color.Unspecified
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "Change Date"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundGray
+                )
+            )
+        },
+        containerColor = BackgroundGray,
+        floatingActionButton = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                // Add Income FAB
+                SmallFloatingActionButton(
+                    onClick            = onAddIncome,
+                    containerColor     = CreditGreen,
+                    contentColor       = Color.White,
+                    shape              = CircleShape,
+                    elevation          = FloatingActionButtonDefaults.elevation(4.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Income", modifier = Modifier.size(20.dp))
+                }
+
+                // Add Expense FAB
+                FloatingActionButton(
+                    onClick            = onAddExpense,
+                    containerColor     = PrimaryBlue,
+                    contentColor       = Color.White,
+                    shape              = CircleShape,
+                    elevation          = FloatingActionButtonDefaults.elevation(6.dp)
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Add Expense", modifier = Modifier.size(26.dp))
+                }
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
 
             // ── Header ────────────────────────────────────────────────────
             Column(
@@ -55,7 +115,7 @@ fun HistoryScreen(
                     .fillMaxWidth()
                     .background(Color.White)
                     .padding(horizontal = 20.dp)
-                    .padding(top = 20.dp, bottom = 16.dp),
+                    .padding(top = 8.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Title
@@ -153,20 +213,6 @@ fun HistoryScreen(
                     }
                 }
             }
-        }
-
-        // ── FAB ───────────────────────────────────────────────────────────
-        FloatingActionButton(
-            onClick            = onAddExpense,
-            modifier           = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 28.dp),
-            containerColor     = PrimaryBlue,
-            contentColor       = Color.White,
-            shape              = CircleShape,
-            elevation          = FloatingActionButtonDefaults.elevation(6.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add transaction", modifier = Modifier.size(26.dp))
         }
     }
 }

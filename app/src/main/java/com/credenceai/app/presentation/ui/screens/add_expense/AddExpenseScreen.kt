@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CalendarMonth
+import com.credenceai.app.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,22 +69,42 @@ fun AddExpenseScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Add Expense",
+                        if (isIncome) "Add Income" else "Add Expense",
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = TextPrimary
+                            )
+                        }
                         Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "App Logo",
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.Unspecified
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "Change Date",
                             tint = TextPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = BackgroundGray
                 )
             )
         },
@@ -314,7 +337,7 @@ fun AddExpenseScreen(
                     )
                 } else {
                     Text(
-                        "Save Transaction",
+                        if (isIncome) "Save Income" else "Save Expense",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White

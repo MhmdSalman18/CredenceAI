@@ -1,10 +1,21 @@
 package com.credenceai.app.presentation.ui.screens
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
+import com.credenceai.app.R
 import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
@@ -13,12 +24,37 @@ import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
 
     val navController = rememberNavController()
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    // TODO: Handle selected date in ViewModels or State
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     val items = listOf(
         BottomNavItem.Home,
@@ -30,15 +66,47 @@ fun MainScreen() {
     // Track current route to hide bottom bar on AddExpense and AddIncome screen
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val showBottomBar = currentRoute != ScreenRoutes.AddExpense.route && currentRoute != ScreenRoutes.AddIncome.route
+    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route || currentRoute == ScreenRoutes.AddIncome.route
+    val showBottomBar = !isAddScreen
+    val showTopBar = !isAddScreen
+
+    val backgroundColor = Color(0xFFF5F6FA)
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("CredenceAI") })
+            if (showTopBar) {
+                TopAppBar(
+                    title = {  },
+                    navigationIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "App Logo",
+                            modifier = Modifier
+                                .padding(start = 12.dp)
+                                .size(100.dp),
+                            tint = Color.Unspecified
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = "Change Date"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = backgroundColor
+                    )
+                )
+            }
         },
+
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = backgroundColor
+                ) {
                     items.forEach { item ->
                         NavigationBarItem(
                             selected = currentRoute == item.route,
@@ -55,7 +123,8 @@ fun MainScreen() {
                     }
                 }
             }
-        }
+        },
+        containerColor = backgroundColor
     ) { innerPadding ->
 
         NavHost(
@@ -96,7 +165,16 @@ fun MainScreen() {
             composable(ScreenRoutes.AddTransaction.route) { AddEditTransactionScreen() }
             composable(ScreenRoutes.Uncategorized.route) { UncategorizedScreen() }
 
-            composable("history")   { HistoryScreen() }
+            composable("history") {
+                HistoryScreen(
+                    onAddExpense = {
+                        navController.navigate(ScreenRoutes.AddExpense.route)
+                    },
+                    onAddIncome = {
+                        navController.navigate(ScreenRoutes.AddIncome.route)
+                    }
+                )
+            }
             composable("analytics") { AnalyticsScreen() }
             composable("settings")  { TransactionsScreen() }
         }
