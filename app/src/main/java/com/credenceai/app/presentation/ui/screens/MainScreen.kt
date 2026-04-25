@@ -1,5 +1,7 @@
 package com.credenceai.app.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -9,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -70,20 +73,28 @@ fun MainScreen() {
     val showBottomBar = !isAddScreen
     val showTopBar = !isAddScreen
 
+    val topBarTitle = when (currentRoute) {
+        BottomNavItem.Home.route -> "Dashboard"
+        BottomNavItem.History.route -> "History"
+        BottomNavItem.Analytics.route -> "Analytics"
+        BottomNavItem.Settings.route -> "Settings"
+        else -> "CredenceAI"
+    }
+
     val backgroundColor = Color(0xFFF5F6FA)
 
     Scaffold(
         topBar = {
             if (showTopBar) {
                 TopAppBar(
-                    title = {  },
+                    title = { Text(topBarTitle) },
                     navigationIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.app_logo),
                             contentDescription = "App Logo",
                             modifier = Modifier
                                 .padding(start = 12.dp)
-                                .size(100.dp),
+                                .size(32.dp),
                             tint = Color.Unspecified
                         )
                     },
@@ -176,7 +187,14 @@ fun MainScreen() {
                 )
             }
             composable("analytics") { AnalyticsScreen() }
-            composable("settings")  { TransactionsScreen() }
+            composable("settings") {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Settings Screen (Placeholder)")
+                }
+            }
         }
     }
 }

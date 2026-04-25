@@ -45,7 +45,6 @@ private val InsightGold    = Color(0xFFFFD700)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
@@ -53,32 +52,6 @@ fun AnalyticsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Analytics") },
-                navigationIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.app_logo),
-                        contentDescription = "App Logo",
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .size(32.dp),
-                        tint = Color.Unspecified
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Date picker */ }) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "Change Date"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundGray
-                )
-            )
-        },
         containerColor = BackgroundGray
     ) { paddingValues ->
         Column(
