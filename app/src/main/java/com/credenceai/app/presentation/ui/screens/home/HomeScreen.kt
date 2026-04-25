@@ -55,7 +55,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundGray)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -221,11 +221,11 @@ private fun ActionButton(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         border = if (isPrimary)
             androidx.compose.foundation.BorderStroke(1.5.dp, borderColor)
         else
-            androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+            androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         tonalElevation = 0.dp,
         shadowElevation = if (isPrimary) 4.dp else 1.dp
     ) {
@@ -243,7 +243,7 @@ private fun ActionButton(
                 Icon(imageVector = icon, contentDescription = label,
                     tint = iconTint, modifier = Modifier.size(20.dp))
             }
-            Text(text = label, color = TextDark, fontSize = 10.sp,
+            Text(text = label, color = MaterialTheme.colorScheme.onSurface, fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center, lineHeight = 14.sp)
         }
@@ -263,9 +263,9 @@ private fun CategoriesSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Categories", color = TextDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Categories", color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             TextButton(onClick = onViewAll, contentPadding = PaddingValues(0.dp)) {
-                Text(text = "View All", color = CardBlueStart, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = "View All", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
@@ -286,9 +286,9 @@ private fun CategoryCard(item: CategoryItem, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 1.dp,
-        border = androidx.compose.foundation.BorderStroke(1.dp, ActionBorder)
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
@@ -300,11 +300,11 @@ private fun CategoryCard(item: CategoryItem, modifier: Modifier = Modifier) {
                 Icon(imageVector = item.icon, contentDescription = item.name,
                     tint = item.iconTint, modifier = Modifier.size(20.dp))
             }
-            Text(text = item.name, color = TextGray, fontSize = 10.sp,
+            Text(text = item.name, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(text = item.amount, color = TextDark, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text(text = item.spendPercent, color = TextGray, fontSize = 12.sp)
+                Text(text = item.amount, color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(text = item.spendPercent, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
         }
     }

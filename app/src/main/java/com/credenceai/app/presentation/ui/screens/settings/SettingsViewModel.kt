@@ -1,10 +1,12 @@
 package com.credenceai.app.presentation.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -48,10 +50,21 @@ data class SettingsUiState(
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
-class SettingsViewModel : ViewModel() {
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val preferencesManager: PreferencesManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            preferencesManager.isDarkMode.collect { isDark ->
+                _uiState.update { it.copy(isDarkMode = isDark) }
+            }
+        }
+    }
 
     // ── Profile ───────────────────────────────────────────────────────────────
 
@@ -79,8 +92,9 @@ class SettingsViewModel : ViewModel() {
     // ── App Preferences ───────────────────────────────────────────────────────
 
     fun onDarkModeToggle(enabled: Boolean) {
-        _uiState.update { it.copy(isDarkMode = enabled) }
-        // TODO: apply theme via ThemeManager
+        viewModelScope.launch {
+            preferencesManager.setDarkMode(enabled)
+        }
     }
 
     fun onCurrencyClick() {

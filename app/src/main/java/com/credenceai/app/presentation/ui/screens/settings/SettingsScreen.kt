@@ -21,27 +21,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
-private val PrimaryBlue    = Color(0xFF1A3A8F)
-private val BrightBlue     = Color(0xFF2D5BE3)
-private val BackgroundGray = Color(0xFFF5F6FA)
-private val TextPrimary    = Color(0xFF1A1D2E)
-private val TextSecondary  = Color(0xFF8A90A2)
 private val TextRed        = Color(0xFFE05252)
-private val DividerGray    = Color(0xFFECEEF3)
 private val GreenOn        = Color(0xFF34C759)
-private val GoldText       = Color(0xFF2D5BE3)
-private val SectionLabel   = Color(0xFF8A90A2)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -95,7 +88,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundGray)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -105,7 +98,12 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.linearGradient(listOf(Color(0xFF2D5BE3), Color(0xFF1A3A8F)))
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
                 )
                 .padding(horizontal = 24.dp, vertical = 28.dp)
         ) {
@@ -303,7 +301,7 @@ fun SettingsScreen(
                 icon    = Icons.Default.Info,
                 label   = "Version",
                 value   = uiState.appVersion,
-                valueColor = GoldText,
+                valueColor = MaterialTheme.colorScheme.primary,
                 showArrow = false,
                 onClick = {}
             )
@@ -333,14 +331,14 @@ fun SettingsScreen(
             Text(
                 "DESIGNED FOR FINANCIAL EXCELLENCE",
                 fontSize = 10.sp,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.sp
             )
             Text(
                 "© 2024 CREDENCE CAPITAL, LLC",
                 fontSize = 10.sp,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 0.5.sp
             )
         }
@@ -362,13 +360,13 @@ private fun SettingsSection(
             title,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = SectionLabel,
+            color = MaterialTheme.colorScheme.primary,
             letterSpacing = 1.sp,
             modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
         )
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -398,7 +396,7 @@ private fun ToggleRow(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SettingsIcon(icon = icon)
-            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
         Switch(
             checked = checked,
@@ -407,7 +405,7 @@ private fun ToggleRow(
                 checkedThumbColor       = Color.White,
                 checkedTrackColor       = GreenOn,
                 uncheckedThumbColor     = Color.White,
-                uncheckedTrackColor     = Color(0xFFD1D5DB),
+                uncheckedTrackColor     = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 uncheckedBorderColor    = Color.Transparent,
                 checkedBorderColor      = Color.Transparent
             ),
@@ -423,7 +421,7 @@ private fun NavigationRow(
     icon: ImageVector,
     label: String,
     value: String? = null,
-    valueColor: Color = TextSecondary,
+    valueColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     trailingIcon: ImageVector = Icons.Default.ChevronRight,
     showArrow: Boolean = true,
     onClick: () -> Unit
@@ -441,7 +439,7 @@ private fun NavigationRow(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SettingsIcon(icon = icon)
-            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -452,7 +450,7 @@ private fun NavigationRow(
             }
             if (showArrow) {
                 Icon(trailingIcon, contentDescription = null,
-                    tint = TextSecondary, modifier = Modifier.size(18.dp))
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -463,7 +461,7 @@ private fun NavigationRow(
 @Composable
 private fun SettingsIcon(
     icon: ImageVector,
-    tint: Color = PrimaryBlue
+    tint: Color = MaterialTheme.colorScheme.primary
 ) {
     Box(
         modifier = Modifier
@@ -481,7 +479,7 @@ private fun SettingsIcon(
 private fun SettingsDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(start = 68.dp),
-        color = DividerGray,
+        color = MaterialTheme.colorScheme.outlineVariant,
         thickness = 0.8.dp
     )
 }

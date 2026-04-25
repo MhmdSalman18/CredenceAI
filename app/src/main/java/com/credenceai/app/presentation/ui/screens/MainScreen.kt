@@ -84,7 +84,7 @@ fun MainScreen() {
 
     val showLogo = currentRoute == BottomNavItem.Home.route || currentRoute == ScreenRoutes.Home.route
 
-    val backgroundColor = Color(0xFFF5F6FA)
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     Scaffold(
         topBar = {
@@ -107,12 +107,14 @@ fun MainScreen() {
                         IconButton(onClick = { showDatePicker = true }) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Change Date"
+                                contentDescription = "Change Date",
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = backgroundColor
+                        containerColor = backgroundColor,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -121,7 +123,8 @@ fun MainScreen() {
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = backgroundColor
+                    containerColor = backgroundColor,
+                    contentColor = MaterialTheme.colorScheme.primary
                 ) {
                     items.forEach { item ->
                         NavigationBarItem(

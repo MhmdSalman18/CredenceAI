@@ -52,7 +52,7 @@ fun AnalyticsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = BackgroundGray
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -65,7 +65,7 @@ fun AnalyticsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -76,7 +76,7 @@ fun AnalyticsScreen(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.surface,
                         border = ButtonDefaults.outlinedButtonBorder,
                         modifier = Modifier.wrapContentWidth()
                     ) {
@@ -86,9 +86,9 @@ fun AnalyticsScreen(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(uiState.selectedPeriod, fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium, color = TextPrimary)
+                                fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                             Icon(Icons.Default.KeyboardArrowDown, contentDescription = null,
-                                tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                         }
                     }
                     Box(
@@ -153,7 +153,7 @@ fun AnalyticsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -164,7 +164,7 @@ fun AnalyticsScreen(
                         isPositive  = uiState.incomePositive,
                         amountColor = CreditGreen
                     )
-                    HorizontalDivider(color = DividerGray)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SummaryRow(
                         label       = "EXPENSES",
                         amount      = uiState.expenses,
@@ -172,7 +172,7 @@ fun AnalyticsScreen(
                         isPositive  = uiState.expensesPositive,
                         amountColor = DebitRed
                     )
-                    HorizontalDivider(color = DividerGray)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SummaryRow(
                         label       = "SAVINGS",
                         amount      = uiState.savings,
@@ -225,7 +225,7 @@ fun AnalyticsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -233,11 +233,11 @@ fun AnalyticsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
                         Text("Spending Trend", fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold, color = TextPrimary)
+                            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         Row(verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Box(Modifier.size(8.dp).background(BrightBlue, CircleShape))
-                            Text("Expenses", fontSize = 11.sp, color = TextSecondary)
+                            Text("Expenses", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     SpendingTrendChart(
@@ -247,7 +247,7 @@ fun AnalyticsScreen(
                     // X-axis labels
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         uiState.spendingPoints.forEach { pt ->
-                            Text(pt.label, fontSize = 9.sp, color = TextSecondary)
+                            Text(pt.label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -259,12 +259,12 @@ fun AnalyticsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text("Category Breakdown", fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold, color = TextPrimary)
+                        fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -290,7 +290,7 @@ fun AnalyticsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -298,7 +298,7 @@ fun AnalyticsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
                         Text("Top Merchants", fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold, color = TextPrimary)
+                            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         TextButton(
                             onClick = viewModel::onViewAllMerchants,
                             contentPadding = PaddingValues(0.dp)
@@ -310,7 +310,7 @@ fun AnalyticsScreen(
                         }
                     }
                     uiState.topMerchants.forEachIndexed { index, merchant ->
-                        if (index > 0) HorizontalDivider(color = DividerGray)
+                        if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         MerchantRow(merchant)
                     }
                 }
@@ -333,7 +333,7 @@ private fun SummaryRow(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-            color = TextSecondary, letterSpacing = 1.sp)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp)
         Text(amount, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = amountColor)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Icon(
@@ -405,6 +405,8 @@ private fun DonutChart(
     centerLabel: String,
     modifier: Modifier = Modifier
 ) {
+    val centerTextColor = MaterialTheme.colorScheme.onSurface
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = size.minDimension * 0.18f
@@ -429,10 +431,10 @@ private fun DonutChart(
         }
         // Center text
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Total", fontSize = 10.sp, color = TextSecondary)
+            Text("Total", fontSize = 10.sp, color = labelColor)
             Text(
                 centerLabel.lines().last(),
-                fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextPrimary
+                fontSize = 14.sp, fontWeight = FontWeight.Bold, color = centerTextColor
             )
         }
     }
@@ -444,8 +446,8 @@ private fun DonutChart(
 private fun LegendItem(slice: CategorySlice) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(modifier = Modifier.size(10.dp).background(Color(slice.color), CircleShape))
-        Text(slice.name, fontSize = 13.sp, color = TextPrimary, modifier = Modifier.width(72.dp))
-        Text(slice.displayPercent, fontSize = 13.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+        Text(slice.name, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.width(72.dp))
+        Text(slice.displayPercent, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -468,7 +470,7 @@ private fun MerchantRow(merchant: MerchantItem) {
             Box(
                 modifier = Modifier
                     .size(38.dp)
-                    .background(LightBlue, RoundedCornerShape(10.dp)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(merchant.iconLabel, fontSize = 16.sp)
@@ -477,12 +479,12 @@ private fun MerchantRow(merchant: MerchantItem) {
                 merchant.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(merchant.amount, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(merchant.amount, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
         // Progress bar
         Box(
@@ -490,7 +492,7 @@ private fun MerchantRow(merchant: MerchantItem) {
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(DividerGray)
+                .background(MaterialTheme.colorScheme.outlineVariant)
         ) {
             Box(
                 modifier = Modifier

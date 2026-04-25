@@ -46,7 +46,7 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = BackgroundGray,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -86,7 +86,7 @@ fun HistoryScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = 20.dp)
                     .padding(top = 8.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -97,19 +97,19 @@ fun HistoryScreen(
                         "Transactions",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         "Managing your financial flow",
                         fontSize = 13.sp,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 // Search bar
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = BackgroundGray,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -120,7 +120,7 @@ fun HistoryScreen(
                         Icon(
                             Icons.Default.Search,
                             contentDescription = null,
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         BasicSearchField(
@@ -144,16 +144,16 @@ fun HistoryScreen(
                             onClick  = { viewModel.onFilterChange(filter) },
                             label    = { Text(filter.label, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
                             colors   = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor    = PrimaryBlue,
-                                selectedLabelColor        = Color.White,
-                                containerColor            = Color.White,
-                                labelColor                = TextPrimary
+                                selectedContainerColor    = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor        = MaterialTheme.colorScheme.onPrimary,
+                                containerColor            = MaterialTheme.colorScheme.surface,
+                                labelColor                = MaterialTheme.colorScheme.onSurface
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled               = true,
                                 selected              = uiState.activeFilter == filter,
-                                borderColor           = DividerGray,
-                                selectedBorderColor   = PrimaryBlue,
+                                borderColor           = MaterialTheme.colorScheme.outlineVariant,
+                                selectedBorderColor   = MaterialTheme.colorScheme.primary,
                                 borderWidth           = 1.dp,
                                 selectedBorderWidth   = 0.dp
                             ),
@@ -196,7 +196,7 @@ fun HistoryScreen(
 private fun DateHeader(label: String) {
     Text(
         text     = label,
-        color    = TextSecondary,
+        color    = MaterialTheme.colorScheme.onSurfaceVariant,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 1.sp,
@@ -215,7 +215,7 @@ private fun TransactionRow(tx: TransactionItem) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape  = RoundedCornerShape(14.dp),
-        color  = Color.White,
+        color  = MaterialTheme.colorScheme.surface,
         shadowElevation = 1.dp
     ) {
         Row(
@@ -239,7 +239,7 @@ private fun TransactionRow(tx: TransactionItem) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     tx.merchantName,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
@@ -279,7 +279,7 @@ private fun TransactionRow(tx: TransactionItem) {
 
                     Text(
                         tx.time,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
                 }
@@ -288,7 +288,7 @@ private fun TransactionRow(tx: TransactionItem) {
             // Amount
             Text(
                 tx.amount,
-                color = if (tx.isCredit) CreditGreen else TextPrimary,
+                color = if (tx.isCredit) CreditGreen else MaterialTheme.colorScheme.onSurface,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -310,11 +310,11 @@ private fun EmptyState() {
         Icon(
             Icons.Default.SearchOff,
             contentDescription = null,
-            tint = TextSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(48.dp)
         )
-        Text("No transactions found", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-        Text("Try adjusting your search or filters", color = TextSecondary, fontSize = 13.sp)
+        Text("No transactions found", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        Text("Try adjusting your search or filters", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
     }
 }
 
@@ -331,12 +331,12 @@ private fun BasicSearchField(
         onValueChange = onValueChange,
         singleLine = true,
         textStyle = androidx.compose.ui.text.TextStyle(
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 14.sp
         ),
         decorationBox = { inner ->
             if (value.isEmpty()) {
-                Text(placeholder, color = TextSecondary, fontSize = 14.sp)
+                Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
             }
             inner()
         },
