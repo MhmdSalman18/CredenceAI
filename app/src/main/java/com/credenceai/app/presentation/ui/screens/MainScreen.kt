@@ -25,6 +25,7 @@ import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScre
 import com.credenceai.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
+import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 import java.util.*
@@ -191,14 +192,7 @@ fun MainScreen() {
                 )
             }
             composable("analytics") { AnalyticsScreen() }
-            composable("settings") {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Settings Screen (Placeholder)")
-                }
-            }
+            composable("settings") { SettingsScreen() }
         }
     }
 }

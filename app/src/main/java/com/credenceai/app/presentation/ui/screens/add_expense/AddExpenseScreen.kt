@@ -47,6 +47,54 @@ fun AddExpenseScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState()
+    val timePickerState = rememberTimePickerState(
+        initialHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY),
+        initialMinute = java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE),
+        is24Hour = false
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        viewModel.onDateSelected(it)
+                    }
+                    showDatePicker = false
+                    showTimePicker = true
+                }) { Text("Next") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onTimeSelected(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
+    }
+
     // Initialize type in ViewModel
     LaunchedEffect(isIncome) {
         viewModel.setTransactionType(if (isIncome) "credit" else "debit")
@@ -84,7 +132,7 @@ fun AddExpenseScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Date picker */ }) {
+                    IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = "Change Date",
@@ -226,17 +274,21 @@ fun AddExpenseScreen(
                     FormField(label = "Date & Time") {
                         OutlinedTextField(
                             value = uiState.dateTime,
-                            onValueChange = viewModel::onDateTimeChange,
-                            placeholder = { Text("dd-mm-yyyy  --:--  --", color = TextSecondary) },
-                            modifier = Modifier.fillMaxWidth(),
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDatePicker = true },
                             colors = transparentFieldColors(),
                             singleLine = true,
                             trailingIcon = {
-                                Icon(
-                                    Icons.Default.CalendarToday,
-                                    contentDescription = "Pick date",
-                                    tint = TextSecondary
-                                )
+                                IconButton(onClick = { showDatePicker = true }) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        contentDescription = "Pick date",
+                                        tint = TextSecondary
+                                    )
+                                }
                             }
                         )
                     }

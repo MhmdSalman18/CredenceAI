@@ -19,6 +19,7 @@ data class AddExpenseUiState(
     val category: String = "",
     val paymentMode: String = "UPI",
     val dateTime: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
     val notes: String = "",
     val receiptUri: URI? = null,
     val isSaving: Boolean = false,
@@ -55,6 +56,38 @@ class AddExpenseViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AddExpenseUiState())
     val uiState: StateFlow<AddExpenseUiState> = _uiState.asStateFlow()
+
+    init {
+        updateDateTimeString(_uiState.value.timestamp)
+    }
+
+    private fun updateDateTimeString(timestamp: Long) {
+        val sdf = java.text.SimpleDateFormat("dd-MM-yyyy HH:mm", java.util.Locale.getDefault())
+        val dateString = sdf.format(java.util.Date(timestamp))
+        _uiState.update { it.copy(dateTime = dateString, timestamp = timestamp) }
+    }
+
+    fun onDateSelected(millis: Long) {
+        val currentCalendar = java.util.Calendar.getInstance()
+        currentCalendar.timeInMillis = _uiState.value.timestamp
+        
+        val selectedCalendar = java.util.Calendar.getInstance()
+        selectedCalendar.timeInMillis = millis
+        
+        currentCalendar.set(java.util.Calendar.YEAR, selectedCalendar.get(java.util.Calendar.YEAR))
+        currentCalendar.set(java.util.Calendar.MONTH, selectedCalendar.get(java.util.Calendar.MONTH))
+        currentCalendar.set(java.util.Calendar.DAY_OF_MONTH, selectedCalendar.get(java.util.Calendar.DAY_OF_MONTH))
+        
+        updateDateTimeString(currentCalendar.timeInMillis)
+    }
+
+    fun onTimeSelected(hour: Int, minute: Int) {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = _uiState.value.timestamp
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
+        calendar.set(java.util.Calendar.MINUTE, minute)
+        updateDateTimeString(calendar.timeInMillis)
+    }
 
     fun setTransactionType(type: String) {
         _uiState.update { it.copy(transactionType = type) }
@@ -113,7 +146,7 @@ class AddExpenseViewModel @Inject constructor(
                     amount = state.amount.toDoubleOrNull() ?: 0.0,
                     type = state.transactionType,
                     merchant = state.merchantName,
-                    dateTime = System.currentTimeMillis(), // TODO: use selected date time
+                    dateTime = state.timestamp,
                     category = state.category,
                     source = "MANUAL",
                     note = state.notes,
