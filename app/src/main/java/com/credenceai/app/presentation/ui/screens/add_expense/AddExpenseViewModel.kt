@@ -23,7 +23,8 @@ data class AddExpenseUiState(
     val receiptUri: URI? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val transactionType: String = "debit"
 )
 
 val categories = listOf(
@@ -54,6 +55,10 @@ class AddExpenseViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AddExpenseUiState())
     val uiState: StateFlow<AddExpenseUiState> = _uiState.asStateFlow()
+
+    fun setTransactionType(type: String) {
+        _uiState.update { it.copy(transactionType = type) }
+    }
 
     fun onAmountChange(value: String) {
         if (value.isEmpty() || value.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
@@ -106,7 +111,7 @@ class AddExpenseViewModel @Inject constructor(
             try {
                 val transaction = Transaction(
                     amount = state.amount.toDoubleOrNull() ?: 0.0,
-                    type = "debit",
+                    type = state.transactionType,
                     merchant = state.merchantName,
                     dateTime = System.currentTimeMillis(), // TODO: use selected date time
                     category = state.category,

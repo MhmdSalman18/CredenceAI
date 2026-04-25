@@ -46,7 +46,8 @@ private val ActionBorder  = Color(0xFFDDE3F0)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onAddExpense: () -> Unit = {}          // ← navigation lambda injected by NavGraph
+    onAddExpense: () -> Unit = {},          // ← navigation lambda injected by NavGraph
+    onAddIncome: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -66,7 +67,7 @@ fun HomeScreen(
             SummaryCard(uiState = uiState)
             QuickActionsRow(
                 onAddExpense   = onAddExpense,               // ← pass nav lambda here
-                onAddIncome    = viewModel::onAddIncome,
+                onAddIncome    = onAddIncome,
                 onExportReport = viewModel::onExportReport
             )
             CategoriesSection(

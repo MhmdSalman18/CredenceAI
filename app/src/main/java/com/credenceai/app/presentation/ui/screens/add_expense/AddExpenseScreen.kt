@@ -38,10 +38,16 @@ private val ErrorRed      = Color(0xFFD94040)
 @Composable
 fun AddExpenseScreen(
     viewModel: AddExpenseViewModel = hiltViewModel(),
+    isIncome: Boolean = false,
     onNavigateBack: () -> Unit = {},
     onSaveSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Initialize type in ViewModel
+    LaunchedEffect(isIncome) {
+        viewModel.setTransactionType(if (isIncome) "credit" else "debit")
+    }
 
     // Navigate away on success
     LaunchedEffect(uiState.saveSuccess) {

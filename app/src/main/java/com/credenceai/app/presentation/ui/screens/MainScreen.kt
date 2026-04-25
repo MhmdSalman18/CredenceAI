@@ -27,10 +27,10 @@ fun MainScreen() {
         BottomNavItem.Settings
     )
 
-    // Track current route to hide bottom bar on AddExpense screen
+    // Track current route to hide bottom bar on AddExpense and AddIncome screen
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val showBottomBar = currentRoute != ScreenRoutes.AddExpense.route
+    val showBottomBar = currentRoute != ScreenRoutes.AddExpense.route && currentRoute != ScreenRoutes.AddIncome.route
 
     Scaffold(
         topBar = {
@@ -68,6 +68,9 @@ fun MainScreen() {
                 HomeScreen(
                     onAddExpense = {
                         navController.navigate(ScreenRoutes.AddExpense.route)
+                    },
+                    onAddIncome = {
+                        navController.navigate(ScreenRoutes.AddIncome.route)
                     }
                 )
             }
@@ -75,6 +78,15 @@ fun MainScreen() {
             // ── Add Expense (full screen, no bottom bar) ──────────────────
             composable(ScreenRoutes.AddExpense.route) {
                 AddExpenseScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaveSuccess  = { navController.popBackStack() }
+                )
+            }
+
+            // ── Add Income (full screen, no bottom bar) ───────────────────
+            composable(ScreenRoutes.AddIncome.route) {
+                AddExpenseScreen(
+                    isIncome = true,
                     onNavigateBack = { navController.popBackStack() },
                     onSaveSuccess  = { navController.popBackStack() }
                 )

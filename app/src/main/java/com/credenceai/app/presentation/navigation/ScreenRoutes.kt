@@ -6,5 +6,6 @@ sealed class ScreenRoutes(val route: String) {
     object Transactions   : ScreenRoutes("transactions")
     object AddTransaction : ScreenRoutes("add_transaction")
     object AddExpense     : ScreenRoutes("add_expense")
+    object AddIncome      : ScreenRoutes("add_income")
     object Uncategorized  : ScreenRoutes("uncategorized")
 }
