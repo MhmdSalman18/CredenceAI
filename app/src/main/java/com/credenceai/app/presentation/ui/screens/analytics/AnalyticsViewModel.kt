@@ -142,7 +142,7 @@ class AnalyticsViewModel @Inject constructor(
         AnalyticsUiState(
             selectedPeriod = period,
             uncategorizedCount = uncategorized.size,
-            showUncategorizedBanner = showBanner && uncategorized.isNotEmpty(),
+            showUncategorizedBanner = showBanner && (uncategorized.isNotEmpty() || true), // Force show for now as requested
             income = "₹%.2f".format(Locale.getDefault(), totalIncome),
             expenses = "₹%.2f".format(Locale.getDefault(), totalSpent),
             savings = "₹%.2f".format(Locale.getDefault(), savings),

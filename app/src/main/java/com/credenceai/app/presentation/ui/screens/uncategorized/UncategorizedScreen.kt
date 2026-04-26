@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BoltOutlined
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.LocalMall
@@ -447,5 +447,5 @@ private fun TransactionIconType.toIcon(): ImageVector = when (this) {
     TransactionIconType.SHOPPING      -> Icons.Outlined.LocalMall
     TransactionIconType.TRANSPORT     -> Icons.Outlined.DirectionsCar
     TransactionIconType.ENTERTAINMENT -> Icons.Outlined.PlayCircleOutline
-    TransactionIconType.UTILITY       -> Icons.Outlined.BoltOutlined
+    TransactionIconType.UTILITY       -> Icons.Outlined.Bolt
 }

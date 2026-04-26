@@ -47,6 +47,7 @@ private val InsightGold    = Color(0xFFFFD700)
 
 @Composable
 fun AnalyticsScreen(
+    onNavigateToUncategorized: () -> Unit,
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -110,7 +111,8 @@ fun AnalyticsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = LightBlue
+                    color = LightBlue,
+                    onClick = onNavigateToUncategorized
                 ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
@@ -135,7 +137,7 @@ fun AnalyticsScreen(
                             )
                         }
                         Button(
-                            onClick = viewModel::onReviewUncategorized,
+                            onClick = onNavigateToUncategorized,
                             colors = ButtonDefaults.buttonColors(containerColor = BrightBlue),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)

@@ -194,7 +194,13 @@ fun MainScreen() {
                     }
                 )
             }
-            composable("analytics") { AnalyticsScreen() }
+            composable("analytics") { 
+                AnalyticsScreen(
+                    onNavigateToUncategorized = {
+                        navController.navigate(ScreenRoutes.Uncategorized.route)
+                    }
+                ) 
+            }
             composable("settings") { SettingsScreen() }
         }
     }
