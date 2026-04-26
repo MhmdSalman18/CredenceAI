@@ -175,14 +175,17 @@ fun MainScreen(
 
             // ── Add Transaction (full screen, no bottom bar) ──────────────────
             composable(
-                route = "${ScreenRoutes.AddExpense.route}?amount={amount}&merchant={merchant}&timestamp={timestamp}&type={type}",
+                route = "${ScreenRoutes.AddExpense.route}?id={id}&amount={amount}&merchant={merchant}&timestamp={timestamp}&type={type}",
                 arguments = listOf(
+                    navArgument("id") { defaultValue = "" },
                     navArgument("amount") { defaultValue = "" },
                     navArgument("merchant") { defaultValue = "" },
                     navArgument("timestamp") { defaultValue = 0L },
                     navArgument("type") { defaultValue = "debit" }
                 )
             ) { backStackEntry ->
+                val idStr = backStackEntry.arguments?.getString("id") ?: ""
+                val id = idStr.toIntOrNull()
                 val amount = backStackEntry.arguments?.getString("amount") ?: ""
                 val merchant = backStackEntry.arguments?.getString("merchant") ?: ""
                 val timestamp = backStackEntry.arguments?.getLong("timestamp") ?: 0L
@@ -192,6 +195,7 @@ fun MainScreen(
                     isIncome = type.lowercase() == "credit" || type.lowercase() == "income",
                     onNavigateBack = { navController.popBackStack() },
                     onSaveSuccess = { navController.popBackStack() },
+                    initialId = id,
                     initialAmount = amount,
                     initialMerchant = merchant,
                     initialTimestamp = if (timestamp != 0L) timestamp else null
@@ -212,18 +216,8 @@ fun MainScreen(
             composable(ScreenRoutes.AddTransaction.route) { AddEditTransactionScreen() }
             composable(ScreenRoutes.Uncategorized.route) { 
                 UncategorizedScreen(
-                    onSave = {
-                        navController.navigate(ScreenRoutes.Home.route) {
-                            popUpTo(ScreenRoutes.Uncategorized.route) { inclusive = true }
-                        }
-                    },
-                    onSkip = {
-                        navController.navigate(ScreenRoutes.Home.route) {
-                            popUpTo(ScreenRoutes.Uncategorized.route) { inclusive = true }
-                        }
-                    },
                     onEditTransaction = { id, amount, merchant, timestamp, type ->
-                        navController.navigate("${ScreenRoutes.AddExpense.route}?amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type")
+                        navController.navigate("${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type")
                     }
                 )
             }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.domain.model.Transaction
 import com.credenceai.app.domain.usecase.AddTransactionUseCase
+import com.credenceai.app.domain.usecase.UpdateTransactionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,8 @@ data class AddExpenseUiState(
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
-    val transactionType: String = "debit"
+    val transactionType: String = "debit",
+    val id: Int? = null
 )
 
 val categories = listOf(
@@ -52,7 +54,8 @@ val paymentModes = listOf(
 
 @HiltViewModel
 class AddExpenseViewModel @Inject constructor(
-    private val addTransactionUseCase: AddTransactionUseCase
+    private val addTransactionUseCase: AddTransactionUseCase,
+    private val updateTransactionUseCase: UpdateTransactionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddExpenseUiState())
@@ -125,9 +128,10 @@ class AddExpenseViewModel @Inject constructor(
         _uiState.update { it.copy(notes = value) }
     }
 
-    fun fillFromTransaction(amount: Double, merchant: String, timestamp: Long, type: String) {
+    fun fillFromTransaction(id: Int?, amount: Double, merchant: String, timestamp: Long, type: String) {
         _uiState.update {
             it.copy(
+                id = id,
                 amount = "%.2f".format(java.util.Locale.getDefault(), amount),
                 merchantName = merchant,
                 timestamp = timestamp,
@@ -161,6 +165,7 @@ class AddExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val transaction = Transaction(
+                    id = state.id ?: 0,
                     amount = state.amount.toDoubleOrNull() ?: 0.0,
                     type = state.transactionType,
                     merchant = state.merchantName,
@@ -171,7 +176,11 @@ class AddExpenseViewModel @Inject constructor(
                     paymentMode = state.paymentMode,
                     referenceId = null
                 )
-                addTransactionUseCase(transaction)
+                if (state.id != null) {
+                    updateTransactionUseCase(transaction)
+                } else {
+                    addTransactionUseCase(transaction)
+                }
                 _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false, errorMessage = e.message ?: "Failed to save transaction") }

@@ -37,8 +37,7 @@ enum class TransactionCategory {
 
 data class UncategorizedUiState(
     val transactions: List<Transaction> = emptyList(),
-    val isAutoSyncActive: Boolean = true,
-    val isSaving: Boolean = false
+    val isAutoSyncActive: Boolean = true
 )
 
 @HiltViewModel
@@ -48,14 +47,7 @@ class UncategorizedViewModel @Inject constructor(
     private val deleteTransactionUseCase: DeleteTransactionUseCase
 ) : ViewModel() {
 
-    private val _isSaving = MutableStateFlow(false)
-    private val _pendingCategories = MutableStateFlow<Map<String, TransactionCategory>>(emptyMap())
-
-    val uiState: StateFlow<UncategorizedUiState> = combine(
-        getUncategorizedTransactionsUseCase(),
-        _isSaving,
-        _pendingCategories
-    ) { transactions, isSaving, pending ->
+    val uiState: StateFlow<UncategorizedUiState> = getUncategorizedTransactionsUseCase().map { transactions ->
         UncategorizedUiState(
             transactions = transactions.map { domainTx ->
                 val id = domainTx.id.toString()
@@ -71,10 +63,9 @@ class UncategorizedViewModel @Inject constructor(
                     rawTimestamp = domainTx.dateTime,
                     type = domainTx.type,
                     iconType = getIconType(domainTx.category),
-                    category = pending[id]
+                    category = null
                 )
-            },
-            isSaving = isSaving
+            }
         )
     }.stateIn(
         scope = viewModelScope,
@@ -93,29 +84,13 @@ class UncategorizedViewModel @Inject constructor(
     }
 
     fun setCategory(transactionId: String, category: TransactionCategory) {
-        _pendingCategories.update { it + (transactionId to category) }
-    }
-
-    fun saveCategorizedTransactions(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _isSaving.value = true
-            val pending = _pendingCategories.value
-            
-            getUncategorizedTransactionsUseCase().first().forEach { domainTx ->
-                val category = pending[domainTx.id.toString()]
-                if (category != null) {
-                    updateTransactionUseCase(domainTx.copy(category = category.name))
-                }
+            val transactions = getUncategorizedTransactionsUseCase().first()
+            val domainTx = transactions.find { it.id.toString() == transactionId }
+            domainTx?.let {
+                updateTransactionUseCase(it.copy(category = category.name))
             }
-            
-            _pendingCategories.value = emptyMap()
-            _isSaving.value = false
-            onSuccess()
         }
-    }
-
-    fun skipForNow(onSkip: () -> Unit) {
-        onSkip()
     }
 
     fun deleteTransaction(transactionId: String) {

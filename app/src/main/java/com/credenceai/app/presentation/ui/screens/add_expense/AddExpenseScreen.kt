@@ -46,7 +46,8 @@ fun AddExpenseScreen(
     onSaveSuccess: () -> Unit = {},
     initialAmount: String = "",
     initialMerchant: String = "",
-    initialTimestamp: Long? = null
+    initialTimestamp: Long? = null,
+    initialId: Int? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -99,10 +100,11 @@ fun AddExpenseScreen(
     }
 
     // Initialize type in ViewModel
-    LaunchedEffect(isIncome, initialAmount, initialMerchant, initialTimestamp) {
+    LaunchedEffect(isIncome, initialAmount, initialMerchant, initialTimestamp, initialId) {
         viewModel.setTransactionType(if (isIncome) "credit" else "debit")
-        if (initialAmount.isNotEmpty() || initialMerchant.isNotEmpty() || initialTimestamp != null) {
+        if (initialAmount.isNotEmpty() || initialMerchant.isNotEmpty() || initialTimestamp != null || initialId != null) {
             viewModel.fillFromTransaction(
+                id = initialId,
                 amount = initialAmount.toDoubleOrNull() ?: 0.0,
                 merchant = initialMerchant,
                 timestamp = initialTimestamp ?: System.currentTimeMillis(),

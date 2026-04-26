@@ -45,8 +45,6 @@ private val LeftAccent     = Color(0xFF2A52D4)
 
 @Composable
 fun UncategorizedScreen(
-    onSave: () -> Unit = {},
-    onSkip: () -> Unit = {},
     onEditTransaction: (id: String, amount: Double, merchant: String, timestamp: Long, type: String) -> Unit = { _, _, _, _, _ -> },
     viewModel: UncategorizedViewModel = hiltViewModel()
 ) {
@@ -54,14 +52,7 @@ fun UncategorizedScreen(
 
     Scaffold(
         topBar = { CredenceTopBar() },
-        containerColor = SurfaceGray,
-        bottomBar = {
-            BottomActionBar(
-                isSaving = uiState.isSaving,
-                onSave = { viewModel.saveCategorizedTransactions(onSave) },
-                onSkip = { viewModel.skipForNow(onSkip) }
-            )
-        }
+        containerColor = SurfaceGray
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -430,63 +421,7 @@ private fun CategoryChipRow(
     }
 }
 
-// ── Bottom action bar ─────────────────────────────────────────────────────────
 
-@Composable
-private fun BottomActionBar(
-    isSaving: Boolean,
-    onSave: () -> Unit,
-    onSkip: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SurfaceGray)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Button(
-            onClick = onSave,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BrandBlueDark),
-            enabled = !isSaving
-        ) {
-            if (isSaving) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = Color.White,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(
-                    text = "Save Categorized Transactions",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-            }
-        }
-
-        TextButton(
-            onClick = onSkip,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Color(0xFFE5E7EB)),
-        ) {
-            Text(
-                text = "Skip for Now",
-                color = BrandBlue,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
-            )
-        }
-    }
-}
 
 // ── Icon mapping ──────────────────────────────────────────────────────────────
 
