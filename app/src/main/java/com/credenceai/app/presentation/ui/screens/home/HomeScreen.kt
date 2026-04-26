@@ -47,8 +47,7 @@ private val ActionBorder  = Color(0xFFDDE3F0)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onAddExpense: () -> Unit = {},          // ← navigation lambda injected by NavGraph
-    onAddIncome: () -> Unit = {}
+    onAddExpense: () -> Unit = {}          // ← navigation lambda injected by NavGraph
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -68,7 +67,6 @@ fun HomeScreen(
             SummaryCard(uiState = uiState)
             QuickActionsRow(
                 onAddExpense   = onAddExpense,               // ← pass nav lambda here
-                onAddIncome    = onAddIncome,
                 onExportReport = viewModel::onExportReport
             )
             CategoriesSection(
@@ -191,16 +189,12 @@ private fun BudgetProgressSection(progress: Float) {
 @Composable
 private fun QuickActionsRow(
     onAddExpense: () -> Unit,
-    onAddIncome: () -> Unit,
     onExportReport: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Remove,
-            label = "ADD\nEXPENSE", iconTint = CardBlueStart,
+            label = "ADD\nTRANSACTION", iconTint = CardBlueStart,
             borderColor = CardBlueStart.copy(alpha = 0.4f), onClick = onAddExpense, isPrimary = true)
-        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Add,
-            label = "ADD\nINCOME", iconTint = Color(0xFF27AE60),
-            borderColor = ActionBorder, onClick = onAddIncome)
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Download,
             label = "EXPORT\nREPORT", iconTint = Color(0xFF2D5BE3),
             borderColor = ActionBorder, onClick = onExportReport)

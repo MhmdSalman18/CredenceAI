@@ -79,8 +79,11 @@ class AnalyticsViewModel @Inject constructor(
         getUncategorizedTransactionsUseCase(),
         _selectedPeriod,
         _showUncategorizedBanner
-    ) { transactions, uncategorized, period, showBanner ->
+    ) { allTransactions, uncategorized, period, showBanner ->
         
+        // Filter out uncategorized transactions from the main totals
+        val transactions = allTransactions.filter { it.category != null }
+
         val now = Calendar.getInstance()
         val currentMonth = now.get(Calendar.MONTH)
         val currentYear = now.get(Calendar.YEAR)

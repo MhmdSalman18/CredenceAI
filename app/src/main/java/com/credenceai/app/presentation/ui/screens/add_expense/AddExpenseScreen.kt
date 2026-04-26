@@ -43,7 +43,10 @@ fun AddExpenseScreen(
     viewModel: AddExpenseViewModel = hiltViewModel(),
     isIncome: Boolean = false,
     onNavigateBack: () -> Unit = {},
-    onSaveSuccess: () -> Unit = {}
+    onSaveSuccess: () -> Unit = {},
+    initialAmount: String = "",
+    initialMerchant: String = "",
+    initialTimestamp: Long? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -96,8 +99,16 @@ fun AddExpenseScreen(
     }
 
     // Initialize type in ViewModel
-    LaunchedEffect(isIncome) {
+    LaunchedEffect(isIncome, initialAmount, initialMerchant, initialTimestamp) {
         viewModel.setTransactionType(if (isIncome) "credit" else "debit")
+        if (initialAmount.isNotEmpty() || initialMerchant.isNotEmpty() || initialTimestamp != null) {
+            viewModel.fillFromTransaction(
+                amount = initialAmount.toDoubleOrNull() ?: 0.0,
+                merchant = initialMerchant,
+                timestamp = initialTimestamp ?: System.currentTimeMillis(),
+                type = if (isIncome) "credit" else "debit"
+            )
+        }
     }
 
     // Navigate away on success

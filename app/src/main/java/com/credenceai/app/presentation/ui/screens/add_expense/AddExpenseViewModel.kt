@@ -37,6 +37,7 @@ val categories = listOf(
     "Bills & Utilities",
     "Travel",
     "Education",
+    "Income",
     "Others"
 )
 
@@ -104,7 +105,12 @@ class AddExpenseViewModel @Inject constructor(
     }
 
     fun onCategoryChange(value: String) {
-        _uiState.update { it.copy(category = value) }
+        _uiState.update { 
+            it.copy(
+                category = value,
+                transactionType = if (value.lowercase() == "income") "credit" else "debit"
+            )
+        }
     }
 
     fun onPaymentModeChange(value: String) {
@@ -117,6 +123,18 @@ class AddExpenseViewModel @Inject constructor(
 
     fun onNotesChange(value: String) {
         _uiState.update { it.copy(notes = value) }
+    }
+
+    fun fillFromTransaction(amount: Double, merchant: String, timestamp: Long, type: String) {
+        _uiState.update {
+            it.copy(
+                amount = "%.2f".format(java.util.Locale.getDefault(), amount),
+                merchantName = merchant,
+                timestamp = timestamp,
+                transactionType = type.lowercase()
+            )
+        }
+        updateDateTimeString(timestamp)
     }
 
     fun onReceiptSelected(uri: URI?) {

@@ -50,7 +50,10 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = getAllTransactionsUseCase()
-        .map { transactions ->
+        .map { allTransactions ->
+            // Filter out uncategorized transactions (captured from notifications but not yet saved/reviewed)
+            val transactions = allTransactions.filter { it.category != null }
+
             val totalIncome = transactions.filter { it.type.lowercase() == "credit" || it.type.lowercase() == "income" }.sumOf { it.amount }
             val totalSpent = transactions.filter { it.type.lowercase() == "debit" || it.type.lowercase() == "expense" }.sumOf { it.amount }
             val netBalance = totalIncome - totalSpent

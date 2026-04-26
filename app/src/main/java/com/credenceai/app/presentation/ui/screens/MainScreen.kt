@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.credenceai.app.R
 import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
@@ -32,7 +34,18 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    viewModel: com.credenceai.app.presentation.MainViewModel = hiltViewModel()
+) {
+    val startDestination by viewModel.startDestination.collectAsState()
+
+    if (startDestination == null) {
+        // Show splash or loading if needed
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     val navController = rememberNavController()
 
@@ -131,7 +144,7 @@ fun MainScreen() {
                             selected = currentRoute == item.route,
                             onClick  = {
                                 navController.navigate(item.route) {
-                                    popUpTo(ScreenRoutes.Home.route) { saveState = true }
+                                    popUpTo(startDestination!!) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
@@ -148,7 +161,7 @@ fun MainScreen() {
 
         NavHost(
             navController    = navController,
-            startDestination = ScreenRoutes.Home.route,
+            startDestination = startDestination!!,
             modifier         = Modifier.padding(innerPadding)
         ) {
 
@@ -156,14 +169,35 @@ fun MainScreen() {
                 HomeScreen(
                     onAddExpense = {
                         navController.navigate(ScreenRoutes.AddExpense.route)
-                    },
-                    onAddIncome = {
-                        navController.navigate(ScreenRoutes.AddIncome.route)
                     }
                 )
             }
 
-            // ── Add Expense (full screen, no bottom bar) ──────────────────
+            // ── Add Transaction (full screen, no bottom bar) ──────────────────
+            composable(
+                route = "${ScreenRoutes.AddExpense.route}?amount={amount}&merchant={merchant}&timestamp={timestamp}&type={type}",
+                arguments = listOf(
+                    navArgument("amount") { defaultValue = "" },
+                    navArgument("merchant") { defaultValue = "" },
+                    navArgument("timestamp") { defaultValue = 0L },
+                    navArgument("type") { defaultValue = "debit" }
+                )
+            ) { backStackEntry ->
+                val amount = backStackEntry.arguments?.getString("amount") ?: ""
+                val merchant = backStackEntry.arguments?.getString("merchant") ?: ""
+                val timestamp = backStackEntry.arguments?.getLong("timestamp") ?: 0L
+                val type = backStackEntry.arguments?.getString("type") ?: "debit"
+
+                AddExpenseScreen(
+                    isIncome = type.lowercase() == "credit" || type.lowercase() == "income",
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaveSuccess = { navController.popBackStack() },
+                    initialAmount = amount,
+                    initialMerchant = merchant,
+                    initialTimestamp = if (timestamp != 0L) timestamp else null
+                )
+            }
+
             composable(ScreenRoutes.AddExpense.route) {
                 AddExpenseScreen(
                     onNavigateBack = { navController.popBackStack() },
@@ -171,18 +205,28 @@ fun MainScreen() {
                 )
             }
 
-            // ── Add Income (full screen, no bottom bar) ───────────────────
-            composable(ScreenRoutes.AddIncome.route) {
-                AddExpenseScreen(
-                    isIncome = true,
-                    onNavigateBack = { navController.popBackStack() },
-                    onSaveSuccess  = { navController.popBackStack() }
-                )
-            }
+            // Remove ScreenRoutes.AddIncome route if it exists and is no longer needed
+
 
             composable(ScreenRoutes.Transactions.route) { TransactionsScreen() }
             composable(ScreenRoutes.AddTransaction.route) { AddEditTransactionScreen() }
-            composable(ScreenRoutes.Uncategorized.route) { UncategorizedScreen() }
+            composable(ScreenRoutes.Uncategorized.route) { 
+                UncategorizedScreen(
+                    onSave = {
+                        navController.navigate(ScreenRoutes.Home.route) {
+                            popUpTo(ScreenRoutes.Uncategorized.route) { inclusive = true }
+                        }
+                    },
+                    onSkip = {
+                        navController.navigate(ScreenRoutes.Home.route) {
+                            popUpTo(ScreenRoutes.Uncategorized.route) { inclusive = true }
+                        }
+                    },
+                    onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        navController.navigate("${ScreenRoutes.AddExpense.route}?amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type")
+                    }
+                )
+            }
 
             composable("history") {
                 HistoryScreen(

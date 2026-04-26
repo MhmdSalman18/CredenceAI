@@ -13,7 +13,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocalMall
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material3.*
@@ -45,6 +47,7 @@ private val LeftAccent     = Color(0xFF2A52D4)
 fun UncategorizedScreen(
     onSave: () -> Unit = {},
     onSkip: () -> Unit = {},
+    onEditTransaction: (id: String, amount: Double, merchant: String, timestamp: Long, type: String) -> Unit = { _, _, _, _, _ -> },
     viewModel: UncategorizedViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,6 +83,18 @@ fun UncategorizedScreen(
                     transaction = transaction,
                     onCategorySelected = { category ->
                         viewModel.setCategory(transaction.id, category)
+                    },
+                    onDelete = {
+                        viewModel.deleteTransaction(transaction.id)
+                    },
+                    onEdit = {
+                        onEditTransaction(
+                            transaction.id,
+                            transaction.amount,
+                            transaction.merchantName,
+                            transaction.rawTimestamp,
+                            transaction.type
+                        )
                     }
                 )
                 Spacer(Modifier.height(10.dp))
@@ -208,7 +223,9 @@ private fun PendingReviewHeader(count: Int, isAutoSyncActive: Boolean) {
 @Composable
 private fun TransactionCard(
     transaction: Transaction,
-    onCategorySelected: (TransactionCategory) -> Unit
+    onCategorySelected: (TransactionCategory) -> Unit,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -218,7 +235,7 @@ private fun TransactionCard(
         label = "cardBg"
     )
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -227,117 +244,147 @@ private fun TransactionCard(
             .border(1.dp, BorderGray, RoundedCornerShape(14.dp))
             .clickable { expanded = !expanded }
     ) {
-        // Left accent bar
-        Box(
-            modifier = Modifier
-                .width(5.dp)
-                .height(IntrinsicSize.Min)
-                .fillMaxHeight()
-                .background(
-                    color = LeftAccent,
-                    shape = RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)
-                )
-        )
+        Row {
+            // Left accent bar
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(IntrinsicSize.Min)
+                    .fillMaxHeight()
+                    .background(
+                        color = LeftAccent,
+                        shape = RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)
+                    )
+            )
 
-        // Card content
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icon
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(SurfaceGray),
-                    contentAlignment = Alignment.Center
+            // Card content
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = transaction.iconType.toIcon(),
-                        contentDescription = null,
-                        tint = BrandBlue,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                Spacer(Modifier.width(12.dp))
-
-                // Name + sub-label
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = transaction.merchantName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color(0xFF111827),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = transaction.subLabel,
-                        fontSize = 12.sp,
-                        color = SubtextGray,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(Modifier.width(8.dp))
-
-                // Amount + date/time
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "$${String.format("%.2f", transaction.amount)}",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp,
-                        color = DebitRed
-                    )
-                    Text(
-                        text = "${transaction.date}, ${transaction.time}",
-                        fontSize = 11.sp,
-                        color = SubtextGray,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End
-                    )
-                }
-            }
-
-            // Category chip row (expandable)
-            if (expanded) {
-                Spacer(Modifier.height(12.dp))
-                HorizontalDivider(color = BorderGray)
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = "Select category",
-                    fontSize = 12.sp,
-                    color = SubtextGray,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(Modifier.height(8.dp))
-                CategoryChipRow(
-                    selectedCategory = transaction.category,
-                    onCategorySelected = { category ->
-                        onCategorySelected(category)
-                        expanded = false
+                    // Icon
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(SurfaceGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = transaction.iconType.toIcon(),
+                            contentDescription = null,
+                            tint = BrandBlue,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
-                )
-            }
 
-            // Show selected category badge when collapsed
-            if (!expanded && transaction.category != null) {
-                Spacer(Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(BrandBlue.copy(alpha = 0.1f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = transaction.category.name,
-                        color = BrandBlue,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
+                    Spacer(Modifier.width(12.dp))
+
+                    // Name + sub-label
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = transaction.merchantName,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color(0xFF111827),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = transaction.subLabel,
+                            fontSize = 12.sp,
+                            color = SubtextGray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    // Amount + date/time
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "${if (transaction.isCredit) "+" else "-"} ₹${
+                                String.format(
+                                    "%.2f",
+                                    Math.abs(transaction.amount)
+                                )
+                            }",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp,
+                            color = if (transaction.isCredit) AccentGreen else DebitRed
+                        )
+                        Text(
+                            text = "${transaction.date}, ${transaction.time}",
+                            fontSize = 11.sp,
+                            color = SubtextGray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        )
+                    }
+                }
+
+                // Category chip row (expandable)
+                if (expanded) {
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider(color = BorderGray)
+                    Spacer(Modifier.height(10.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Select category",
+                            fontSize = 12.sp,
+                            color = SubtextGray,
+                            fontWeight = FontWeight.Medium
+                        )
+                        
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(
+                                onClick = onEdit,
+                                modifier = Modifier.size(32.dp).background(BrandBlue.copy(alpha = 0.1f), CircleShape)
+                            ) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Edit", tint = BrandBlue, modifier = Modifier.size(16.dp))
+                            }
+                            IconButton(
+                                onClick = onDelete,
+                                modifier = Modifier.size(32.dp).background(DebitRed.copy(alpha = 0.1f), CircleShape)
+                            ) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = DebitRed, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    }
+                    
+                    Spacer(Modifier.height(8.dp))
+                    CategoryChipRow(
+                        selectedCategory = transaction.category,
+                        onCategorySelected = { category ->
+                            onCategorySelected(category)
+                            expanded = false
+                        }
                     )
+                }
+
+                // Show selected category badge when collapsed
+                if (!expanded && transaction.category != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(BrandBlue.copy(alpha = 0.1f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = transaction.category.name,
+                            color = BrandBlue,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
@@ -448,4 +495,5 @@ private fun TransactionIconType.toIcon(): ImageVector = when (this) {
     TransactionIconType.TRANSPORT     -> Icons.Outlined.DirectionsCar
     TransactionIconType.ENTERTAINMENT -> Icons.Outlined.PlayCircleOutline
     TransactionIconType.UTILITY       -> Icons.Outlined.Bolt
+    TransactionIconType.OTHER         -> Icons.Outlined.CalendarMonth
 }
