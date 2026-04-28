@@ -116,15 +116,7 @@ fun MainScreen(
                             )
                         }
                     },
-                    actions = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Change Date",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    },
+                    actions = {},
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = backgroundColor,
                         titleContentColor = MaterialTheme.colorScheme.onSurface

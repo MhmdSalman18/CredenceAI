@@ -144,15 +144,7 @@ fun AddExpenseScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "Change Date",
-                            tint = TextPrimary
-                        )
-                    }
-                },
+                actions = {},
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BackgroundGray
                 )

@@ -124,15 +124,7 @@ private fun CredenceTopBar() {
                 )
             }
         },
-        actions = {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Outlined.CalendarMonth,
-                    contentDescription = "Calendar",
-                    tint = BrandBlue
-                )
-            }
-        },
+        actions = {},
         colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceGray)
     )
 }
