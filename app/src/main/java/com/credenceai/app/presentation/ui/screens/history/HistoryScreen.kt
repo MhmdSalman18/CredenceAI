@@ -48,31 +48,15 @@ fun HistoryScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.End
+            // Add Expense FAB
+            FloatingActionButton(
+                onClick            = onAddExpense,
+                containerColor     = PrimaryBlue,
+                contentColor       = Color.White,
+                shape              = CircleShape,
+                elevation          = FloatingActionButtonDefaults.elevation(6.dp)
             ) {
-                // Add Income FAB
-                SmallFloatingActionButton(
-                    onClick            = onAddIncome,
-                    containerColor     = CreditGreen,
-                    contentColor       = Color.White,
-                    shape              = CircleShape,
-                    elevation          = FloatingActionButtonDefaults.elevation(4.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Income", modifier = Modifier.size(20.dp))
-                }
-
-                // Add Expense FAB
-                FloatingActionButton(
-                    onClick            = onAddExpense,
-                    containerColor     = PrimaryBlue,
-                    contentColor       = Color.White,
-                    shape              = CircleShape,
-                    elevation          = FloatingActionButtonDefaults.elevation(6.dp)
-                ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Add Expense", modifier = Modifier.size(26.dp))
-                }
+                Icon(Icons.Default.Remove, contentDescription = "Add Expense", modifier = Modifier.size(26.dp))
             }
         }
     ) { paddingValues ->
