@@ -28,6 +28,7 @@ import com.credenceai.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
+import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 import java.util.*
@@ -231,7 +232,22 @@ fun MainScreen(
                     }
                 ) 
             }
-            composable("settings") { SettingsScreen() }
+            composable("settings") { 
+                SettingsScreen(
+                    onNavigateToSupportedBanks = {
+                        navController.navigate(ScreenRoutes.SupportedBanks.route)
+                    },
+                    onNavigateToUncategorized = {
+                        navController.navigate(ScreenRoutes.Uncategorized.route)
+                    }
+                ) 
+            }
+
+            composable(ScreenRoutes.SupportedBanks.route) {
+                SupportedBanksScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

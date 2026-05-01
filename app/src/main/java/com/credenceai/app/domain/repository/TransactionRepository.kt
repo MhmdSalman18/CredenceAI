@@ -15,4 +15,6 @@ interface TransactionRepository {
     fun getAllTransactions(): Flow<List<Transaction>>
 
     fun getUncategorizedTransactions(): Flow<List<Transaction>>
+
+    suspend fun deleteAllTransactions()
 }

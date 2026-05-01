@@ -27,11 +27,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.credenceai.app.core.utils.ExportUtils
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.io.File
-import java.io.FileOutputStream
 import android.content.Intent
 import android.net.Uri
 
@@ -62,7 +61,7 @@ fun HomeScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is HomeEffect.ExportReport -> {
-                    exportAndShareReport(context, effect.csvData)
+                    ExportUtils.exportAndShareReport(context, effect.csvData)
                 }
             }
         }
@@ -318,39 +317,6 @@ private fun CategoryCard(item: CategoryItem, modifier: Modifier = Modifier) {
                 Text(text = item.spendPercent, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
         }
-    }
-}
-
-// ─── Export & Share Helper ────────────────────────────────────────────────────
-
-private fun exportAndShareReport(context: android.content.Context, csvData: String) {
-    try {
-        val directory = File(context.cacheDir, "reports")
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
-        
-        val file = File(directory, "Credence_Report_${System.currentTimeMillis()}.csv")
-        FileOutputStream(file).use { out ->
-            out.write(csvData.toByteArray())
-        }
-
-        val uri: Uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            file
-        )
-
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/csv"
-            putExtra(Intent.EXTRA_SUBJECT, "Credence Financial Report")
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        
-        context.startActivity(Intent.createChooser(intent, "Export Report"))
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
 }
 

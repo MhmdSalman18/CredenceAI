@@ -38,4 +38,8 @@ class TransactionRepositoryImpl @Inject constructor(
             list.map { it.toDomain() }
         }
     }
+
+    override suspend fun deleteAllTransactions() {
+        dao.deleteAllTransactions()
+    }
 }

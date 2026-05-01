@@ -18,7 +18,20 @@ class TransactionNotificationListener : NotificationListenerService() {
     @Inject
     lateinit var addTransactionUseCase: AddTransactionUseCase
 
+    @Inject
+    lateinit var preferencesManager: com.credenceai.app.core.preferences.PreferencesManager
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var isTrackingEnabled = true
+
+    override fun onCreate() {
+        super.onCreate()
+        serviceScope.launch {
+            preferencesManager.isSmsTrackingEnabled.collect { enabled ->
+                isTrackingEnabled = enabled
+            }
+        }
+    }
 
     // ── Allowlist: only parse notifications from these packages ───────────────
     // Add or remove packages based on what's installed on your target devices.
@@ -101,6 +114,7 @@ class TransactionNotificationListener : NotificationListenerService() {
     // ── Entry point ───────────────────────────────────────────────────────────
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        if (!isTrackingEnabled) return
         val packageName = sbn.packageName ?: return
 
         // Step 1: Package must be in our allowlist

@@ -3,6 +3,7 @@ package com.credenceai.app.presentation.ui.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.core.preferences.PreferencesManager
+import com.credenceai.app.domain.usecase.ClearAllTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,6 +15,10 @@ data class UserProfile(
     val name: String  = "Julian Sinclair",
     val avatarUrl: String? = null
 )
+
+sealed class SettingsEffect {
+    data class ExportData(val csvData: String) : SettingsEffect()
+}
 
 // ─── UI State ─────────────────────────────────────────────────────────────────
 
@@ -45,31 +50,55 @@ data class SettingsUiState(
     val showCurrencyPicker: Boolean   = false,
     val showLanguagePicker: Boolean   = false,
     val showEditNameDialog: Boolean   = false,
-    val tempName: String              = ""
+    val tempName: String              = "",
+    val openUrl: String?              = null
 )
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val clearAllTransactionsUseCase: ClearAllTransactionsUseCase,
+    private val exportTransactionsUseCase: com.credenceai.app.domain.usecase.ExportTransactionsUseCase
 ) : ViewModel() {
 
+    private val _effect = MutableSharedFlow<SettingsEffect>()
+    val effect: SharedFlow<SettingsEffect> = _effect.asSharedFlow()
+
     private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            preferencesManager.isDarkMode.collect { isDark ->
-                _uiState.update { it.copy(isDarkMode = isDark) }
-            }
-        }
-    }
-
-    // ── Profile ───────────────────────────────────────────────────────────────
+    val uiState: StateFlow<SettingsUiState> = combine(
+        _uiState,
+        preferencesManager.isDarkMode,
+        preferencesManager.userName,
+        preferencesManager.currency,
+        preferencesManager.isSmsTrackingEnabled,
+        preferencesManager.language,
+        preferencesManager.transactionAlerts,
+        preferencesManager.budgetAlerts,
+        preferencesManager.monthlyReports,
+        preferencesManager.appLockEnabled
+    ) { flows ->
+        val state = flows[0] as SettingsUiState
+        state.copy(
+            isDarkMode = flows[1] as Boolean,
+            profile = state.profile.copy(name = flows[2] as String),
+            currency = flows[3] as String,
+            smsTrackingEnabled = flows[4] as Boolean,
+            language = flows[5] as String,
+            transactionAlerts = flows[6] as Boolean,
+            budgetAlerts = flows[7] as Boolean,
+            monthlyReports = flows[8] as Boolean,
+            appLockEnabled = flows[9] as Boolean
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SettingsUiState()
+    )
 
     fun onEditNameClick() {
-        _uiState.update { it.copy(showEditNameDialog = true, tempName = it.profile.name) }
+        _uiState.update { it.copy(showEditNameDialog = true, tempName = uiState.value.profile.name) }
     }
 
     fun onTempNameChange(newName: String) {
@@ -77,11 +106,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onSaveName() {
-        _uiState.update { 
-            it.copy(
-                profile = it.profile.copy(name = it.tempName),
-                showEditNameDialog = false
-            ) 
+        viewModelScope.launch {
+            preferencesManager.setUserName(_uiState.value.tempName)
+            _uiState.update { it.copy(showEditNameDialog = false) }
         }
     }
 
@@ -102,7 +129,10 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onCurrencySelected(currency: String) {
-        _uiState.update { it.copy(currency = currency, showCurrencyPicker = false) }
+        viewModelScope.launch {
+            preferencesManager.setCurrency(currency)
+            _uiState.update { it.copy(showCurrencyPicker = false) }
+        }
     }
 
     fun onLanguageClick() {
@@ -110,32 +140,43 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onLanguageSelected(language: String) {
-        _uiState.update { it.copy(language = language, showLanguagePicker = false) }
+        viewModelScope.launch {
+            preferencesManager.setLanguage(language)
+            _uiState.update { it.copy(showLanguagePicker = false) }
+        }
     }
 
     // ── Notifications ─────────────────────────────────────────────────────────
 
     fun onTransactionAlertsToggle(enabled: Boolean) {
-        _uiState.update { it.copy(transactionAlerts = enabled) }
+        viewModelScope.launch {
+            preferencesManager.setTransactionAlerts(enabled)
+        }
     }
 
     fun onBudgetAlertsToggle(enabled: Boolean) {
-        _uiState.update { it.copy(budgetAlerts = enabled) }
+        viewModelScope.launch {
+            preferencesManager.setBudgetAlerts(enabled)
+        }
     }
 
     fun onMonthlyReportsToggle(enabled: Boolean) {
-        _uiState.update { it.copy(monthlyReports = enabled) }
+        viewModelScope.launch {
+            preferencesManager.setMonthlyReports(enabled)
+        }
     }
 
     // ── SMS Tracking ──────────────────────────────────────────────────────────
 
     fun onSmsTrackingToggle(enabled: Boolean) {
-        _uiState.update { it.copy(smsTrackingEnabled = enabled) }
-        // TODO: request SMS permission if enabling
+        viewModelScope.launch {
+            preferencesManager.setSmsTrackingEnabled(enabled)
+        }
     }
 
     fun onSupportedBanksClick() {
-        // TODO: navigate to supported banks list
+        // This usually opens a WebView or a static list screen
+        // For now, let's keep it as is, or maybe we could use an effect to show a list
     }
 
     fun onManageUncategorizedClick() {
@@ -149,7 +190,10 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onExportDataClick() {
-        // TODO: export CSV/PDF
+        viewModelScope.launch {
+            val csvData = exportTransactionsUseCase()
+            _effect.emit(SettingsEffect.ExportData(csvData))
+        }
     }
 
     fun onClearDataClick() {
@@ -157,8 +201,10 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onClearDataConfirmed() {
-        _uiState.update { it.copy(showClearDataDialog = false) }
-        // TODO: clear local database via repository
+        viewModelScope.launch {
+            clearAllTransactionsUseCase()
+            _uiState.update { it.copy(showClearDataDialog = false) }
+        }
     }
 
     fun onClearDataDismissed() {
@@ -168,8 +214,9 @@ class SettingsViewModel @Inject constructor(
     // ── Security ──────────────────────────────────────────────────────────────
 
     fun onAppLockToggle(enabled: Boolean) {
-        _uiState.update { it.copy(appLockEnabled = enabled) }
-        // TODO: enable/disable biometric or PIN lock
+        viewModelScope.launch {
+            preferencesManager.setAppLockEnabled(enabled)
+        }
     }
 
     fun onChangePinClick() {
@@ -179,10 +226,14 @@ class SettingsViewModel @Inject constructor(
     // ── About ─────────────────────────────────────────────────────────────────
 
     fun onPrivacyPolicyClick() {
-        // TODO: open privacy policy URL
+        _uiState.update { it.copy(openUrl = "https://credencecapital.com/privacy") }
     }
 
     fun onSupportClick() {
-        // TODO: open support screen or email intent
+        _uiState.update { it.copy(openUrl = "mailto:support@credencecapital.com") }
+    }
+
+    fun onUrlOpened() {
+        _uiState.update { it.copy(openUrl = null) }
     }
 }

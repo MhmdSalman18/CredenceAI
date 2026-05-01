@@ -18,12 +18,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.Intent
+import android.net.Uri
+import com.credenceai.app.core.utils.ExportUtils
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
@@ -34,9 +39,30 @@ private val GreenOn        = Color(0xFF34C759)
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToSupportedBanks: () -> Unit = {},
+    onNavigateToUncategorized: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is SettingsEffect.ExportData -> {
+                    ExportUtils.exportAndShareReport(context, effect.csvData)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(uiState.openUrl) {
+        uiState.openUrl?.let { url ->
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+            viewModel.onUrlOpened()
+        }
+    }
 
     // ── Edit Name Dialog ──────────────────────────────────────────────────
     if (uiState.showEditNameDialog) {
@@ -232,14 +258,14 @@ fun SettingsScreen(
             NavigationRow(
                 icon    = Icons.Default.AccountBalance,
                 label   = "Supported Banks",
-                value   = "${uiState.supportedBanksCount} Banks",
-                onClick = viewModel::onSupportedBanksClick
+                value   = "27 Banks",
+                onClick = onNavigateToSupportedBanks
             )
             SettingsDivider()
             NavigationRow(
                 icon    = Icons.Default.SwapHoriz,
                 label   = "Manage Uncategorized",
-                onClick = viewModel::onManageUncategorizedClick
+                onClick = onNavigateToUncategorized
             )
         }
 

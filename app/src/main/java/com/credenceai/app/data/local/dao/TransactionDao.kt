@@ -35,4 +35,7 @@ interface TransactionDao {
         start: Long,
         end: Long
     ): Flow<List<TransactionEntity>>
+
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAllTransactions()
 }
