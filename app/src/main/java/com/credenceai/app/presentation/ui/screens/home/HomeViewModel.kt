@@ -10,11 +10,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
+import com.credenceai.app.domain.usecase.ExportTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import java.util.Locale
 
@@ -28,6 +33,10 @@ data class CategoryItem(
     val icon: ImageVector,
     val iconTint: Color
 )
+
+sealed class HomeEffect {
+    data class ExportReport(val csvData: String) : HomeEffect()
+}
 
 // ─── UI State ─────────────────────────────────────────────────────────────────
 
@@ -46,8 +55,12 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getAllTransactionsUseCase: GetAllTransactionsUseCase
+    private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
+    private val exportTransactionsUseCase: ExportTransactionsUseCase
 ) : ViewModel() {
+
+    private val _effect = MutableSharedFlow<HomeEffect>()
+    val effect: SharedFlow<HomeEffect> = _effect.asSharedFlow()
 
     val uiState: StateFlow<HomeUiState> = getAllTransactionsUseCase()
         .map { allTransactions ->
@@ -116,7 +129,10 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onExportReport() {
-        // TODO: trigger PDF / CSV export
+        viewModelScope.launch {
+            val csvData = exportTransactionsUseCase()
+            _effect.emit(HomeEffect.ExportReport(csvData))
+        }
     }
 
     fun onViewAllCategories() {
