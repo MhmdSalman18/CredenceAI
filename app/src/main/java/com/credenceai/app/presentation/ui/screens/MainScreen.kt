@@ -27,6 +27,7 @@ import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScre
 import com.credenceai.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
+import com.credenceai.app.presentation.ui.screens.notifications.NotificationsScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
 import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
@@ -89,10 +90,11 @@ fun MainScreen(
     val showTopBar = !isAddScreen
 
     val topBarTitle = when (currentRoute) {
-        BottomNavItem.Home.route -> "Dashboard"
+        BottomNavItem.Home.route -> ""
         BottomNavItem.History.route -> "History"
         BottomNavItem.Analytics.route -> "Analytics"
         BottomNavItem.Settings.route -> "Settings"
+        ScreenRoutes.Notifications.route -> "Notifications"
         else -> "CredenceAI"
     }
 
@@ -112,7 +114,7 @@ fun MainScreen(
                                 contentDescription = "App Logo",
                                 modifier = Modifier
                                     .padding(start = 12.dp)
-                                    .size(32.dp),
+                                    .size(120.dp),
                                 tint = Color.Unspecified
                             )
                         }
@@ -162,6 +164,12 @@ fun MainScreen(
                 HomeScreen(
                     onAddExpense = {
                         navController.navigate(ScreenRoutes.AddExpense.route)
+                    },
+                    onViewAllTransactions = {
+                        navController.navigate("history")
+                    },
+                    onNotificationsClick = {
+                        navController.navigate(ScreenRoutes.Notifications.route)
                     }
                 )
             }
@@ -246,6 +254,12 @@ fun MainScreen(
             composable(ScreenRoutes.SupportedBanks.route) {
                 SupportedBanksScreen(
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(ScreenRoutes.Notifications.route) {
+                NotificationsScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }

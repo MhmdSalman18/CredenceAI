@@ -2,7 +2,9 @@ package com.credenceai.app.core.preferences
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -18,13 +20,15 @@ class PreferencesManager @Inject constructor(
 ) {
     private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
     private val SMS_TRACKING_KEY = booleanPreferencesKey("sms_tracking")
-    private val USER_NAME_KEY = androidx.datastore.preferences.core.stringPreferencesKey("user_name")
-    private val CURRENCY_KEY = androidx.datastore.preferences.core.stringPreferencesKey("currency")
-    private val LANGUAGE_KEY = androidx.datastore.preferences.core.stringPreferencesKey("language")
+    private val USER_NAME_KEY = stringPreferencesKey("user_name")
+    private val CURRENCY_KEY = stringPreferencesKey("currency")
+    private val LANGUAGE_KEY = stringPreferencesKey("language")
     private val TRANSACTION_ALERTS_KEY = booleanPreferencesKey("transaction_alerts")
     private val BUDGET_ALERTS_KEY = booleanPreferencesKey("budget_alerts")
     private val MONTHLY_REPORTS_KEY = booleanPreferencesKey("monthly_reports")
     private val APP_LOCK_KEY = booleanPreferencesKey("app_lock")
+    private val MONTHLY_BUDGET_KEY = doublePreferencesKey("monthly_budget")
+    private val HIDE_BALANCE_KEY = booleanPreferencesKey("hide_balance")
 
     val isDarkMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[DARK_MODE_KEY] ?: false
@@ -35,7 +39,7 @@ class PreferencesManager @Inject constructor(
     }
 
     val userName: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[USER_NAME_KEY] ?: "Julian Sinclair"
+        preferences[USER_NAME_KEY] ?: "New User"
     }
 
     val currency: Flow<String> = context.dataStore.data.map { preferences ->
@@ -60,6 +64,14 @@ class PreferencesManager @Inject constructor(
 
     val appLockEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[APP_LOCK_KEY] ?: true
+    }
+
+    val monthlyBudget: Flow<Double> = context.dataStore.data.map { preferences ->
+        preferences[MONTHLY_BUDGET_KEY] ?: 0.0
+    }
+
+    val isBalanceHidden: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[HIDE_BALANCE_KEY] ?: false
     }
 
     suspend fun setDarkMode(enabled: Boolean) {
@@ -113,6 +125,18 @@ class PreferencesManager @Inject constructor(
     suspend fun setAppLockEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[APP_LOCK_KEY] = enabled
+        }
+    }
+
+    suspend fun setMonthlyBudget(amount: Double) {
+        context.dataStore.edit { preferences ->
+            preferences[MONTHLY_BUDGET_KEY] = amount
+        }
+    }
+
+    suspend fun setBalanceHidden(hidden: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HIDE_BALANCE_KEY] = hidden
         }
     }
 }

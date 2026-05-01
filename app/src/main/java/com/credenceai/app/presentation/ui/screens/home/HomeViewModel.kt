@@ -9,19 +9,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
+import com.credenceai.app.domain.model.Transaction
 import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
 import com.credenceai.app.domain.usecase.ExportTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import java.util.Locale
+import java.util.Calendar
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -41,12 +38,14 @@ sealed class HomeEffect {
 // ─── UI State ─────────────────────────────────────────────────────────────────
 
 data class HomeUiState(
+    val userName: String               = "User",
     val netBalance: String             = "₹0.00",
     val changeLabel: String            = "No changes this month",
     val totalIncome: String            = "₹0.00",
     val totalSpent: String             = "₹0.00",
     val budgetProgress: Float          = 0.0f,
     val categories: List<CategoryItem> = emptyList(),
+    val recentTransactions: List<Transaction> = emptyList(),
     val isLoading: Boolean             = false,
     val errorMessage: String?          = null
 )
@@ -56,14 +55,17 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
-    private val exportTransactionsUseCase: ExportTransactionsUseCase
+    private val exportTransactionsUseCase: ExportTransactionsUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _effect = MutableSharedFlow<HomeEffect>()
     val effect: SharedFlow<HomeEffect> = _effect.asSharedFlow()
 
-    val uiState: StateFlow<HomeUiState> = getAllTransactionsUseCase()
-        .map { allTransactions ->
+    val uiState: StateFlow<HomeUiState> = combine(
+        getAllTransactionsUseCase(),
+        preferencesManager.userName
+    ) { allTransactions, name ->
             // Filter out uncategorized transactions (captured from notifications but not yet saved/reviewed)
             val transactions = allTransactions.filter { it.category != null }
 
@@ -88,12 +90,16 @@ class HomeViewModel @Inject constructor(
                 )
             }
 
+            val recent = transactions.sortedByDescending { it.dateTime }.take(5)
+
             HomeUiState(
+                userName = name.split(" ").firstOrNull() ?: "User",
                 netBalance = "₹%.2f".format(Locale.getDefault(), netBalance),
                 totalIncome = "₹%.2f".format(Locale.getDefault(), totalIncome),
                 totalSpent = "₹%.2f".format(Locale.getDefault(), totalSpent),
                 budgetProgress = if (totalIncome > 0) (totalSpent / totalIncome).toFloat().coerceIn(0f, 1f) else 0f,
                 categories = categories.sortedByDescending { it.amount.replace("₹", "").replace(",", "").toDoubleOrNull() ?: 0.0 },
+                recentTransactions = recent,
                 isLoading = false
             )
         }.stateIn(
