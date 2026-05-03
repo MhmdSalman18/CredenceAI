@@ -12,8 +12,10 @@ room = "2.7.0-alpha11"
 hilt = "2.59.2"
 ksp = "2.1.0-1.0.29"
 datastore = "1.1.2"
+timber = "5.0.1"
 
 [libraries]
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

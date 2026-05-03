@@ -2,14 +2,15 @@ package com.credenceai.app.data.notification
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import com.credenceai.app.domain.model.Transaction
 import com.credenceai.app.domain.usecase.AddTransactionUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -23,26 +24,32 @@ class TransactionNotificationListener : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var isTrackingEnabled = true
+    private var preferenceJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Service Created")
-        serviceScope.launch {
+        Timber.d("Service Created")
+        preferenceJob = serviceScope.launch {
             preferencesManager.isSmsTrackingEnabled.collect { enabled ->
                 isTrackingEnabled = enabled
-                Log.d(TAG, "Tracking enabled status: $enabled")
+                Timber.d("Tracking enabled status: $enabled")
             }
         }
     }
 
+    override fun onDestroy() {
+        preferenceJob?.cancel()
+        super.onDestroy()
+    }
+
     override fun onListenerConnected() {
         super.onListenerConnected()
-        Log.d(TAG, "✅ Notification Listener Connected")
+        Timber.d("✅ Notification Listener Connected")
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        Log.d(TAG, "❌ Notification Listener Disconnected")
+        Timber.d("❌ Notification Listener Disconnected")
     }
 
     // ── Allowlist: only parse notifications from these packages ───────────────
@@ -94,24 +101,15 @@ class TransactionNotificationListener : NotificationListenerService() {
 
     // ── Debit keywords ────────────────────────────────────────────────────────
     private val DEBIT_KEYWORDS = listOf(
-        "debited", "debit", "spent", "paid", "sent", "withdrawn",
-        "payment of", "purchase of", "charged", "deducted",
-        // ── GPay / UPI style ──
-        "you paid",
-        "you sent",
-        "paid to",
-        "transferred to"
+        "debited", "spent", "withdrawn", "payment of", "purchase of", 
+        "charged", "deducted", "you paid", "you sent", "paid to", "transferred to"
     )
 
     // ── Credit keywords ───────────────────────────────────────────────────────
     private val CREDIT_KEYWORDS = listOf(
-        "credited", "credit", "received", "refund", "cashback",
-        "deposited", "added to", "payment received",
-        // ── GPay / UPI style ──
-        "paid you",
-        "sent you",
-        "transferred to you",
-        "money received"
+        "credited", "received", "refund", "cashback", "deposited", 
+        "added to", "payment received", "paid you", "sent you", 
+        "transferred to you", "money received"
     )
 
     // ── Noise keywords: drop notification immediately if found ────────────────
@@ -133,17 +131,25 @@ class TransactionNotificationListener : NotificationListenerService() {
         RegexOption.IGNORE_CASE
     )
 
+    // Specific pattern for GPay/PhonePe/UPI titles:
+    // "Muhammed Zaayid paid you ₹1.00" -> Group 2: Muhammed Zaayid
+    // "You paid Muhammed Zaayid ₹1.00" -> Group 1: Muhammed Zaayid
+    private val UPI_TITLE_MERCHANT_REGEX = Regex(
+        """(?:You paid|Paid to|Sent to)\s+(.*?)\s+(?:₹|Rs)|^(.*?)\s+(?:paid you|sent you|transferred)\s+(?:₹|Rs)""",
+        RegexOption.IGNORE_CASE
+    )
+
     // ── Entry point ───────────────────────────────────────────────────────────
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName ?: "unknown"
-        Log.d(TAG, "New notification from: $packageName (Tracking=$isTrackingEnabled)")
+        Timber.d("New notification from: $packageName (Tracking=$isTrackingEnabled)")
 
         if (!isTrackingEnabled) return
 
         // Step 1: Package must be in our allowlist
         if (packageName !in FINANCIAL_PACKAGES) {
-            Log.d(TAG, "Ignored: $packageName is not in FINANCIAL_PACKAGES")
+            Timber.d("Ignored: $packageName is not in FINANCIAL_PACKAGES")
             return
         }
 
@@ -163,10 +169,6 @@ class TransactionNotificationListener : NotificationListenerService() {
         val bigText = getSafeText("android.bigText")
         val infoText = getSafeText("android.infoText")
         
-        val full = "$title $text $bigText $infoText".trim()
-
-        Log.d(TAG, "Processing: title='$title' text='$text' bigText='$bigText'")
-
         // Step 2: For generic SMS apps, sender must look like a bank/UPI ID
         val isSmsApp = packageName in setOf(
             "com.google.android.apps.messaging",
@@ -175,44 +177,67 @@ class TransactionNotificationListener : NotificationListenerService() {
             "org.thoughtcrime.securesms"
         )
         if (isSmsApp && !isFinancialSmsSender(title)) {
-            Log.d(TAG, "Ignored SMS — sender '$title' not a known bank/UPI sender")
+            Timber.d("Ignored SMS — sender '$title' not a known bank/UPI sender")
             return
         }
 
-        // Step 3: Drop obvious noise immediately
+        val full = "$title $text $bigText $infoText".trim()
         val fullLower = full.lowercase()
+
+        Timber.d("Processing: title='%s' text='%s' bigText='%s'", title, text, bigText)
+
+        // Step 3: Drop obvious noise immediately
         if (NOISE_KEYWORDS.any { fullLower.contains(it) }) {
-            Log.d(TAG, "Ignored — noise keyword matched")
+            Timber.d("Ignored — noise keyword matched")
             return
         }
 
         // Step 4: Must contain a parseable amount
         val amountMatch = AMOUNT_REGEX.find(full) ?: run {
-            Log.d(TAG, "Ignored — no amount found")
+            Timber.d("Ignored — no amount found")
             return
         }
         val amount = amountMatch.groupValues[1].replace(",", "").toDoubleOrNull() ?: run {
-            Log.d(TAG, "Ignored — amount parse failed")
+            Timber.d("Ignored — amount parse failed")
             return
         }
 
         // Step 5: Determine debit vs credit
-        val isDebit  = DEBIT_KEYWORDS.any  { fullLower.contains(it) }
         val isCredit = CREDIT_KEYWORDS.any { fullLower.contains(it) }
+        val isDebit  = DEBIT_KEYWORDS.any  { fullLower.contains(it) }
 
         if (!isDebit && !isCredit) {
-            Log.d(TAG, "Ignored — no debit/credit keyword found")
+            Timber.d("Ignored — no debit/credit keyword found")
             return
         }
 
-        val type = if (isCredit && !isDebit) "credit" else "debit"
+        // Prioritize specific phrases to resolve overlaps like "paid" vs "paid you"
+        val type = when {
+            fullLower.contains("paid you") || fullLower.contains("sent you") || fullLower.contains("received from") -> "credit"
+            fullLower.contains("you paid") || fullLower.contains("you sent") || fullLower.contains("paid to") -> "debit"
+            isCredit && !isDebit -> "credit"
+            else -> "debit"
+        }
 
         // Step 6: Try to extract merchant name
-        val merchantFromText = MERCHANT_REGEX.find(text)?.groupValues?.get(1)?.trim()
-        val merchant = when {
-            !merchantFromText.isNullOrBlank() -> merchantFromText
-            title.isNotBlank()               -> title
-            else                             -> "Unknown Merchant"
+        var merchant = "Unknown Merchant"
+        
+        // Strategy A: Specific UPI patterns in full text (GPay/PhonePe often put name in title)
+        val upiMatch = UPI_TITLE_MERCHANT_REGEX.find(full)
+        val extractedFromUpi = upiMatch?.groupValues?.get(1)?.takeIf { it.isNotBlank() }
+            ?: upiMatch?.groupValues?.get(2)?.takeIf { it.isNotBlank() }
+
+        if (!extractedFromUpi.isNullOrBlank()) {
+            merchant = extractedFromUpi.trim()
+        } else {
+            // Strategy B: General "to/at/for" regex, excluding common noise words
+            val merchantFromText = MERCHANT_REGEX.find(text)?.groupValues?.get(1)?.trim()
+            if (!merchantFromText.isNullOrBlank() && !isMerchantNoise(merchantFromText)) {
+                merchant = merchantFromText
+            } else if (title.isNotBlank() && !isSmsApp) {
+                // If it's a financial app, the title is usually the merchant/entity
+                merchant = title
+            }
         }
 
         // Step 7: Infer payment mode and save to DB
@@ -238,14 +263,22 @@ class TransactionNotificationListener : NotificationListenerService() {
         serviceScope.launch {
             try {
                 addTransactionUseCase(transaction)
-                Log.d(TAG, "✅ Saved: $type ₹$amount via $paymentMode from '$merchant'")
+                Timber.d("✅ Saved: %s ₹%f via %s from '%s'", type, amount, paymentMode, merchant)
             } catch (e: Exception) {
-                Log.e(TAG, "❌ DB error", e)
+                Timber.e(e, "❌ DB error")
             }
         }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Returns true if the name looks like notification UI noise rather than a merchant.
+     */
+    private fun isMerchantNoise(name: String): Boolean {
+        val lower = name.lowercase().trim()
+        return lower == "view" || lower == "view." || lower.contains("tap to") || lower.contains("click here")
+    }
 
     /**
      * Returns true if the SMS title (sender ID) looks like an Indian bank /
