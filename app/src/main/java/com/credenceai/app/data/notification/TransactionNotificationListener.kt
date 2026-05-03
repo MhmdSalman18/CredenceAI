@@ -26,11 +26,23 @@ class TransactionNotificationListener : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "Service Created")
         serviceScope.launch {
             preferencesManager.isSmsTrackingEnabled.collect { enabled ->
                 isTrackingEnabled = enabled
+                Log.d(TAG, "Tracking enabled status: $enabled")
             }
         }
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d(TAG, "✅ Notification Listener Connected")
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        Log.d(TAG, "❌ Notification Listener Disconnected")
     }
 
     // ── Allowlist: only parse notifications from these packages ───────────────
@@ -83,13 +95,23 @@ class TransactionNotificationListener : NotificationListenerService() {
     // ── Debit keywords ────────────────────────────────────────────────────────
     private val DEBIT_KEYWORDS = listOf(
         "debited", "debit", "spent", "paid", "sent", "withdrawn",
-        "payment of", "purchase of", "charged", "deducted"
+        "payment of", "purchase of", "charged", "deducted",
+        // ── GPay / UPI style ──
+        "you paid",
+        "you sent",
+        "paid to",
+        "transferred to"
     )
 
     // ── Credit keywords ───────────────────────────────────────────────────────
     private val CREDIT_KEYWORDS = listOf(
         "credited", "credit", "received", "refund", "cashback",
-        "deposited", "added to", "payment received"
+        "deposited", "added to", "payment received",
+        // ── GPay / UPI style ──
+        "paid you",
+        "sent you",
+        "transferred to you",
+        "money received"
     )
 
     // ── Noise keywords: drop notification immediately if found ────────────────
@@ -105,27 +127,45 @@ class TransactionNotificationListener : NotificationListenerService() {
         RegexOption.IGNORE_CASE
     )
 
-    // Extracts a merchant/UPI handle after "to" or "at" or "for"
+    // Extracts a merchant/UPI handle after "to" or "at" or "for" or "on"
     private val MERCHANT_REGEX = Regex(
-        """(?:to|at|for)\s+([A-Za-z0-9@.\-_ ]{2,40})""",
+        """(?:to|at|for|on)\s+([A-Za-z0-9@.\-_ ]{2,40})""",
         RegexOption.IGNORE_CASE
     )
 
     // ── Entry point ───────────────────────────────────────────────────────────
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        val packageName = sbn.packageName ?: "unknown"
+        Log.d(TAG, "New notification from: $packageName (Tracking=$isTrackingEnabled)")
+
         if (!isTrackingEnabled) return
-        val packageName = sbn.packageName ?: return
 
         // Step 1: Package must be in our allowlist
-        if (packageName !in FINANCIAL_PACKAGES) return
+        if (packageName !in FINANCIAL_PACKAGES) {
+            Log.d(TAG, "Ignored: $packageName is not in FINANCIAL_PACKAGES")
+            return
+        }
 
         val extras = sbn.notification.extras
-        val title  = extras.getString("android.title")?.trim() ?: ""
-        val text   = extras.getString("android.text")?.trim()  ?: ""
-        val full   = "$title $text"
+        
+        // Use a helper to safely extract text from any format (Spannable or String)
+        fun getSafeText(key: String): String {
+            return try {
+                extras.getCharSequence(key)?.toString() ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+        }
 
-        Log.d(TAG, "[$packageName] title='$title' text='$text'")
+        val title = getSafeText("android.title")
+        val text = getSafeText("android.text")
+        val bigText = getSafeText("android.bigText")
+        val infoText = getSafeText("android.infoText")
+        
+        val full = "$title $text $bigText $infoText".trim()
+
+        Log.d(TAG, "Processing: title='$title' text='$text' bigText='$bigText'")
 
         // Step 2: For generic SMS apps, sender must look like a bank/UPI ID
         val isSmsApp = packageName in setOf(
@@ -175,7 +215,14 @@ class TransactionNotificationListener : NotificationListenerService() {
             else                             -> "Unknown Merchant"
         }
 
-        // Step 7: Save to DB
+        // Step 7: Infer payment mode and save to DB
+        val paymentMode = when {
+            packageName.contains("nbu.paisa") || packageName.contains("phonepe") || packageName.contains("upiapp") -> "UPI"
+            packageName.contains("messaging") || packageName.contains("mms") -> "SMS"
+            packageName.contains("paytm") -> "PAYTM"
+            else -> "APP"
+        }
+
         val transaction = Transaction(
             amount      = amount,
             type        = type,
@@ -183,15 +230,15 @@ class TransactionNotificationListener : NotificationListenerService() {
             dateTime    = sbn.postTime,
             category    = null,
             source      = "NOTIFICATION",
-            note        = "[$packageName] $text",
-            paymentMode = null,
+            note        = "[$packageName] $full",
+            paymentMode = paymentMode,
             referenceId = "REF-${sbn.postTime}"
         )
 
         serviceScope.launch {
             try {
                 addTransactionUseCase(transaction)
-                Log.d(TAG, "✅ Saved: $type ₹$amount from '$merchant'")
+                Log.d(TAG, "✅ Saved: $type ₹$amount via $paymentMode from '$merchant'")
             } catch (e: Exception) {
                 Log.e(TAG, "❌ DB error", e)
             }
