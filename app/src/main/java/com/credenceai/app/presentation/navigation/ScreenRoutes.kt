@@ -8,6 +8,7 @@ sealed class ScreenRoutes(val route: String) {
     object AddExpense     : ScreenRoutes("add_expense")
     object AddIncome      : ScreenRoutes("add_income")
     object Uncategorized  : ScreenRoutes("uncategorized")
+    object SmartBudget    : ScreenRoutes("smart_budget")
     object SupportedBanks : ScreenRoutes("supported_banks")
     object Notifications  : ScreenRoutes("notifications")
 }

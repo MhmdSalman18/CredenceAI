@@ -58,6 +58,7 @@ private val ActionBorder  = Color(0xFFDDE3F0)
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onAddExpense: () -> Unit = {},
+    onSmartBudget: () -> Unit = {},
     onViewAllTransactions: () -> Unit = {},
     onNotificationsClick: () -> Unit = {}
 ) {
@@ -94,6 +95,7 @@ fun HomeScreen(
             SummaryCard(uiState = uiState)
             QuickActionsRow(
                 onAddExpense   = onAddExpense,
+                onSmartBudget  = onSmartBudget,
                 onExportReport = viewModel::onExportReport
             )
             RecentTransactionsSection(
@@ -370,12 +372,16 @@ private fun BudgetProgressSection(progress: Float) {
 @Composable
 private fun QuickActionsRow(
     onAddExpense: () -> Unit,
+    onSmartBudget: () -> Unit,
     onExportReport: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Remove,
             label = "ADD\nTRANSACTION", iconTint = CardBlueStart,
             borderColor = CardBlueStart.copy(alpha = 0.4f), onClick = onAddExpense, isPrimary = true)
+        ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.AttachMoney,
+            label = "SMART\nBUDGET", iconTint = Color(0xFF4CD964),
+            borderColor = ActionBorder, onClick = onSmartBudget)
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Download,
             label = "EXPORT\nREPORT", iconTint = Color(0xFF2D5BE3),
             borderColor = ActionBorder, onClick = onExportReport)

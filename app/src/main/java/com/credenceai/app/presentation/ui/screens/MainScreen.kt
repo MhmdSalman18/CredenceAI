@@ -29,6 +29,7 @@ import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.notifications.NotificationsScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
 import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
@@ -85,7 +86,9 @@ fun MainScreen(
     // Track current route to hide bottom bar on AddExpense and AddIncome screen
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route || currentRoute == ScreenRoutes.AddIncome.route
+    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route || 
+                     currentRoute == ScreenRoutes.AddIncome.route ||
+                     currentRoute == ScreenRoutes.SmartBudget.route
     val showBottomBar = !isAddScreen
     val showTopBar = !isAddScreen
 
@@ -164,6 +167,9 @@ fun MainScreen(
                 HomeScreen(
                     onAddExpense = {
                         navController.navigate(ScreenRoutes.AddExpense.route)
+                    },
+                    onSmartBudget = {
+                        navController.navigate(ScreenRoutes.SmartBudget.route)
                     },
                     onViewAllTransactions = {
                         navController.navigate("history")
@@ -260,6 +266,18 @@ fun MainScreen(
             composable(ScreenRoutes.Notifications.route) {
                 NotificationsScreen(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable(ScreenRoutes.SmartBudget.route) {
+                SmartBudgetIntroScreen(
+                    onSetMonthlyBudget = {
+                        // Navigate to budget setting or back
+                        navController.popBackStack()
+                    },
+                    onLearnHowItWorks = {
+                        // Handle learn more
+                    }
                 )
             }
         }

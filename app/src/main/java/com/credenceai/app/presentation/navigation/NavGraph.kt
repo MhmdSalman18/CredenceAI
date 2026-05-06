@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
@@ -24,8 +25,15 @@ fun NavGraph() {
             HomeScreen(
                 onAddExpense = {
                     navController.navigate(ScreenRoutes.AddExpense.route)
+                },
+                onSmartBudget = {
+                    navController.navigate(ScreenRoutes.SmartBudget.route)
                 }
             )
+        }
+
+        composable(ScreenRoutes.SmartBudget.route) {
+            SmartBudgetIntroScreen()
         }
 
         composable(ScreenRoutes.Transactions.route) {
