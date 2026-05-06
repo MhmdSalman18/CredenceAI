@@ -65,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 
@@ -83,7 +84,7 @@ private val RemainingBlue = Color(0xFF2A1DC4)
 
 @Composable
 fun EditBudgetScreen(
-    viewModel: EditBudgetViewModel = viewModel(),
+    viewModel: EditBudgetViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
     onBudgetSaved: () -> Unit = {},
 ) {

@@ -29,7 +29,9 @@ import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.notifications.NotificationsScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.EditBudgetScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
 import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
@@ -272,11 +274,31 @@ fun MainScreen(
             composable(ScreenRoutes.SmartBudget.route) {
                 SmartBudgetIntroScreen(
                     onSetMonthlyBudget = {
-                        // Navigate to budget setting or back
-                        navController.popBackStack()
+                        navController.navigate(ScreenRoutes.EditBudget.route)
                     },
                     onLearnHowItWorks = {
                         // Handle learn more
+                    }
+                )
+            }
+
+            composable(ScreenRoutes.EditBudget.route) {
+                EditBudgetScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onBudgetSaved = {
+                        navController.navigate(ScreenRoutes.ViewBudget.route) {
+                            popUpTo(ScreenRoutes.SmartBudget.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(ScreenRoutes.ViewBudget.route) {
+                ViewBudgetScreen(
+                    onEditBudget = {
+                        navController.navigate(ScreenRoutes.EditBudget.route)
                     }
                 )
             }

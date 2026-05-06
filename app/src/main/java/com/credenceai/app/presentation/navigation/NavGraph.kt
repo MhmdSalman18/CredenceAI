@@ -7,7 +7,9 @@ import androidx.navigation.compose.rememberNavController
 import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.EditBudgetScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
+import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 
@@ -33,7 +35,32 @@ fun NavGraph() {
         }
 
         composable(ScreenRoutes.SmartBudget.route) {
-            SmartBudgetIntroScreen()
+            SmartBudgetIntroScreen(
+                onSetMonthlyBudget = {
+                    navController.navigate(ScreenRoutes.EditBudget.route)
+                }
+            )
+        }
+
+        composable(ScreenRoutes.EditBudget.route) {
+            EditBudgetScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onBudgetSaved = {
+                    navController.navigate(ScreenRoutes.ViewBudget.route) {
+                        popUpTo(ScreenRoutes.SmartBudget.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(ScreenRoutes.ViewBudget.route) {
+            ViewBudgetScreen(
+                onEditBudget = {
+                    navController.navigate(ScreenRoutes.EditBudget.route)
+                }
+            )
         }
 
         composable(ScreenRoutes.Transactions.route) {

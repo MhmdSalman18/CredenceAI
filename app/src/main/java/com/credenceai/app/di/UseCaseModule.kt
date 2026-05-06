@@ -1,7 +1,9 @@
 package com.credenceai.app.di
 
 
+import com.credenceai.app.data.repository.BudgetRepositoryImpl
 import com.credenceai.app.data.repository.TransactionRepositoryImpl
+import com.credenceai.app.domain.repository.BudgetRepository
 import com.credenceai.app.domain.repository.TransactionRepository
 import com.credenceai.app.domain.usecase.*
 import dagger.Module
@@ -17,6 +19,11 @@ object UseCaseModule {
     fun provideRepository(
         repoImpl: TransactionRepositoryImpl
     ): TransactionRepository = repoImpl
+
+    @Provides
+    fun provideBudgetRepository(
+        repoImpl: BudgetRepositoryImpl
+    ): BudgetRepository = repoImpl
 
     @Provides
     fun provideAddTransactionUseCase(

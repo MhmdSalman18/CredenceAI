@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 // ─── Brand Colors ─────────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@ private val AiBannerBg     = Color(0xFF2A1DC4)
 
 @Composable
 fun ViewBudgetScreen(
-    viewModel: ViewBudgetViewModel = viewModel(),
+    viewModel: ViewBudgetViewModel = hiltViewModel(),
     onEditBudget: () -> Unit = {},
     onViewAnalytics: () -> Unit = {},
 ) {

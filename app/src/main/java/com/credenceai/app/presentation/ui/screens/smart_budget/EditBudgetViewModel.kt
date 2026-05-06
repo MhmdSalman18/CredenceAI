@@ -2,11 +2,16 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.data.local.entity.BudgetCategoryEntity
+import com.credenceai.app.data.local.entity.BudgetEntity
+import com.credenceai.app.domain.repository.BudgetRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 
@@ -18,7 +23,7 @@ data class BudgetCategory(
 )
 
 data class EditBudgetUiState(
-    val totalBudget: String = "20,000",
+    val totalBudget: String = "20000",
     val autoDistribute: Boolean = true,
     val repeatEveryMonth: Boolean = true,
     val categories: List<BudgetCategory> = defaultCategories(),
@@ -33,23 +38,45 @@ data class EditBudgetUiState(
 }
 
 private fun defaultCategories() = listOf(
-    BudgetCategory(id = "food",      name = "Food",      iconEmoji = "🍴", allocatedAmount = 5_000.0),
-    BudgetCategory(id = "transport", name = "Transport", iconEmoji = "🚗", allocatedAmount = 5_000.0),
-    BudgetCategory(id = "bills",     name = "Bills",     iconEmoji = "🧾", allocatedAmount = 5_000.0),
-    BudgetCategory(id = "shopping",  name = "Shopping",  iconEmoji = "🛍", allocatedAmount = 5_000.0),
+    BudgetCategory(id = "food",      name = "Food",      iconEmoji = "🍴", allocatedAmount = 5000.0),
+    BudgetCategory(id = "transport", name = "Transport", iconEmoji = "🚗", allocatedAmount = 5000.0),
+    BudgetCategory(id = "bills",     name = "Bills",     iconEmoji = "🧾", allocatedAmount = 5000.0),
+    BudgetCategory(id = "shopping",  name = "Shopping",  iconEmoji = "🛍", allocatedAmount = 5000.0),
 )
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
 
-class EditBudgetViewModel : ViewModel() {
+@HiltViewModel
+class EditBudgetViewModel @Inject constructor(
+    private val budgetRepository: BudgetRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditBudgetUiState())
     val uiState: StateFlow<EditBudgetUiState> = _uiState.asStateFlow()
 
+    init {
+        // Load existing budget if any
+        viewModelScope.launch {
+            budgetRepository.getBudget("monthly_budget").collect { budgetWithCats ->
+                budgetWithCats?.let { data ->
+                    _uiState.update { state ->
+                        state.copy(
+                            totalBudget = data.budget.totalBudget.toInt().toString(),
+                            autoDistribute = data.budget.autoDistribute,
+                            repeatEveryMonth = data.budget.repeatEveryMonth,
+                            categories = data.categories.map {
+                                BudgetCategory(it.id, it.name, it.iconEmoji, it.allocatedAmount)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // ── Total Budget ─────────────────────────────────────────────────────────
 
     fun onTotalBudgetChanged(raw: String) {
-        // Strip non-numeric chars except decimal
         val cleaned = raw.filter { it.isDigit() || it == '.' }
         _uiState.update { state ->
             val updated = state.copy(totalBudget = cleaned)
@@ -73,7 +100,7 @@ class EditBudgetViewModel : ViewModel() {
     // ── Category Allocation ──────────────────────────────────────────────────
 
     fun onCategoryAmountChanged(categoryId: String, rawAmount: String) {
-        val amount = rawAmount.replace(",", "").toDoubleOrNull() ?: return
+        val amount = rawAmount.replace(",", "").toDoubleOrNull() ?: 0.0
         _uiState.update { state ->
             state.copy(
                 categories = state.categories.map { cat ->
@@ -111,9 +138,22 @@ class EditBudgetViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // TODO: inject & call your repository here
-                // budgetRepository.saveBudget(uiState.value.toRequest())
-                kotlinx.coroutines.delay(800) // Simulate network
+                val currentState = _uiState.value
+                val budget = BudgetEntity(
+                    totalBudget = currentState.totalBudgetAsDouble,
+                    autoDistribute = currentState.autoDistribute,
+                    repeatEveryMonth = currentState.repeatEveryMonth
+                )
+                val categories = currentState.categories.map {
+                    BudgetCategoryEntity(
+                        id = it.id,
+                        budgetId = "monthly_budget",
+                        name = it.name,
+                        iconEmoji = it.iconEmoji,
+                        allocatedAmount = it.allocatedAmount
+                    )
+                }
+                budgetRepository.saveBudget(budget, categories)
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -137,7 +177,6 @@ class EditBudgetViewModel : ViewModel() {
         val count = categories.size
         if (count == 0) return this
         val perCategory = (totalBudgetAsDouble / count).let {
-            // Round to nearest 0.01
             kotlin.math.round(it * 100) / 100.0
         }
         return copy(

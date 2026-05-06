@@ -2,11 +2,14 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.domain.repository.BudgetRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -34,11 +37,11 @@ data class BudgetCategoryProgress(
 }
 
 data class ViewBudgetUiState(
-    val totalBudget: Double = 20_000.0,
-    val remainingBudget: Double = 15_500.0,
-    val usagePercent: Float = 0.225f,
-    val categories: List<BudgetCategoryProgress> = defaultCategories(),
-    val aiAdvice: String = "Based on current trends, you might exceed your Bills budget by 15K next month.",
+    val totalBudget: Double = 0.0,
+    val remainingBudget: Double = 0.0,
+    val usagePercent: Float = 0f,
+    val categories: List<BudgetCategoryProgress> = emptyList(),
+    val aiAdvice: String = "Set up your budget to get AI-powered financial advice.",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
 ) {
@@ -46,28 +49,12 @@ data class ViewBudgetUiState(
     val usagePercentDisplay: String get() = "${"%.1f".format(usagePercent * 100)}%"
 }
 
-private fun defaultCategories() = listOf(
-    BudgetCategoryProgress(
-        id = "food", name = "Food", iconEmoji = "🍴",
-        spentAmount = 500.0, totalAmount = 5_000.0
-    ),
-    BudgetCategoryProgress(
-        id = "transport", name = "Transport", iconEmoji = "🚗",
-        spentAmount = 4_000.0, totalAmount = 5_000.0
-    ),
-    BudgetCategoryProgress(
-        id = "bills", name = "Bills", iconEmoji = "🧾",
-        spentAmount = 6_000.0, totalAmount = 5_000.0
-    ),
-    BudgetCategoryProgress(
-        id = "shopping", name = "Shopping", iconEmoji = "🛍",
-        spentAmount = 1_000.0, totalAmount = 5_000.0
-    ),
-)
-
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
-class ViewBudgetViewModel : ViewModel() {
+@HiltViewModel
+class ViewBudgetViewModel @Inject constructor(
+    private val budgetRepository: BudgetRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ViewBudgetUiState())
     val uiState: StateFlow<ViewBudgetUiState> = _uiState.asStateFlow()
@@ -80,10 +67,37 @@ class ViewBudgetViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // TODO: val budget = budgetRepository.getCurrentBudget()
-                // _uiState.update { it.copy(isLoading = false, ...mapFromDomain(budget)) }
-                kotlinx.coroutines.delay(600) // Simulate network
-                _uiState.update { it.copy(isLoading = false) }
+                budgetRepository.getBudget("monthly_budget").collect { budgetWithCats ->
+                    if (budgetWithCats != null) {
+                        val totalBudget = budgetWithCats.budget.totalBudget
+                        val categories = budgetWithCats.categories.map {
+                            // In a real app, spentAmount would come from TransactionRepository
+                            BudgetCategoryProgress(
+                                id = it.id,
+                                name = it.name,
+                                iconEmoji = it.iconEmoji,
+                                spentAmount = 0.0, // TODO: Link with transactions
+                                totalAmount = it.allocatedAmount
+                            )
+                        }
+                        val spentTotal = categories.sumOf { it.spentAmount }
+                        val remainingBudget = totalBudget - spentTotal
+                        val usagePercent = if (totalBudget > 0) (spentTotal / totalBudget).toFloat() else 0f
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                totalBudget = totalBudget,
+                                remainingBudget = remainingBudget,
+                                usagePercent = usagePercent,
+                                categories = categories,
+                                aiAdvice = "You have set a budget of ₹${"%.0f".format(totalBudget)}. Track your expenses to see AI advice here."
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = e.message ?: "Failed to load budget")
