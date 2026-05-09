@@ -12,6 +12,10 @@ class BudgetRepositoryImpl @Inject constructor(
     private val budgetDao: BudgetDao
 ) : BudgetRepository {
 
+    override fun getAllBudgets(): Flow<List<BudgetWithCategories>> {
+        return budgetDao.getAllBudgetsWithCategories()
+    }
+
     override fun getBudget(budgetId: String): Flow<BudgetWithCategories?> {
         return budgetDao.getBudgetWithCategories(budgetId)
     }

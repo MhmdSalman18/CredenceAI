@@ -145,6 +145,16 @@ fun EditBudgetScreen(
 
                 Spacer(Modifier.height(20.dp))
 
+                // ── Budget Name Input ──────────────────────────────────────────
+                SectionLabel("Budget Name")
+                Spacer(Modifier.height(8.dp))
+                BudgetNameInput(
+                    value = uiState.budgetName,
+                    onValueChange = viewModel::onBudgetNameChanged
+                )
+
+                Spacer(Modifier.height(20.dp))
+
                 // ── Total Budget Input ────────────────────────────────────────
                 SectionLabel("Total Budget")
                 Spacer(Modifier.height(8.dp))
@@ -249,6 +259,42 @@ private fun EditBudgetTopBar(onNavigateBack: () -> Unit) {
                 color = TextPrimary
             )
         }
+    }
+}
+
+// ─── Budget Name Input ────────────────────────────────────────────────────────
+
+@Composable
+private fun BudgetNameInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+            .background(SurfaceWhite)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextPrimary
+            ),
+            cursorBrush = SolidColor(BrandBlue),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            decorationBox = { inner ->
+                if (value.isEmpty()) {
+                    Text("e.g. Monthly Budget", fontSize = 16.sp, color = TextHint)
+                }
+                inner()
+            }
+        )
     }
 }
 

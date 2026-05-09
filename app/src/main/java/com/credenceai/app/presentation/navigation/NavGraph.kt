@@ -37,28 +37,50 @@ fun NavGraph() {
         composable(ScreenRoutes.SmartBudget.route) {
             SmartBudgetIntroScreen(
                 onSetMonthlyBudget = {
-                    navController.navigate(ScreenRoutes.EditBudget.route)
+                    navController.navigate(ScreenRoutes.EditBudget.createRoute("new"))
+                },
+                onViewBudget = { budgetId ->
+                    navController.navigate(ScreenRoutes.ViewBudget.createRoute(budgetId))
                 }
             )
         }
 
-        composable(ScreenRoutes.EditBudget.route) {
+        composable(
+            route = ScreenRoutes.EditBudget.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("budgetId") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = "new"
+                }
+            )
+        ) {
             EditBudgetScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onBudgetSaved = {
-                    navController.navigate(ScreenRoutes.ViewBudget.route) {
-                        popUpTo(ScreenRoutes.SmartBudget.route) { inclusive = true }
-                    }
+                    // We don't have the budgetId easily here unless we extract it from the ViewModel
+                    // or pass it back. For now, let's just go back to Intro screen which will refresh.
+                    navController.popBackStack()
                 }
             )
         }
 
-        composable(ScreenRoutes.ViewBudget.route) {
+        composable(
+            route = ScreenRoutes.ViewBudget.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("budgetId") {
+                    type = androidx.navigation.NavType.StringType
+                }
+            )
+        ) {
+            val budgetId = it.arguments?.getString("budgetId") ?: ""
             ViewBudgetScreen(
                 onEditBudget = {
-                    navController.navigate(ScreenRoutes.EditBudget.route)
+                    navController.navigate(ScreenRoutes.EditBudget.createRoute(budgetId))
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

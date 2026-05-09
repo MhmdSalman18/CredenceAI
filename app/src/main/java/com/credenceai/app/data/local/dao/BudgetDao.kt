@@ -15,6 +15,10 @@ interface BudgetDao {
     suspend fun insertCategories(categories: List<BudgetCategoryEntity>)
 
     @Transaction
+    @Query("SELECT * FROM budgets")
+    fun getAllBudgetsWithCategories(): Flow<List<BudgetWithCategories>>
+
+    @Transaction
     @Query("SELECT * FROM budgets WHERE id = :budgetId")
     fun getBudgetWithCategories(budgetId: String): Flow<BudgetWithCategories?>
 

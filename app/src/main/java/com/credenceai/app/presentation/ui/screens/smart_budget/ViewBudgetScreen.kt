@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,6 +79,7 @@ fun ViewBudgetScreen(
     viewModel: ViewBudgetViewModel = hiltViewModel(),
     onEditBudget: () -> Unit = {},
     onViewAnalytics: () -> Unit = {},
+    onNavigateBack: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -117,11 +120,13 @@ fun ViewBudgetScreen(
                 ) {
                     // ── Budget Summary Card ───────────────────────────────────
                     BudgetSummaryCard(
+                        budgetName = uiState.budgetName,
                         totalBudget = uiState.totalBudget,
                         remainingBudget = uiState.remainingBudget,
                         usagePercent = uiState.usagePercent,
                         usagePercentDisplay = uiState.usagePercentDisplay,
                         onEditClick = onEditBudget,
+                        onBackClick = onNavigateBack,
                     )
 
                     Spacer(Modifier.height(16.dp))
@@ -193,11 +198,13 @@ fun ViewBudgetScreen(
 
 @Composable
 private fun BudgetSummaryCard(
+    budgetName: String,
     totalBudget: Double,
     remainingBudget: Double,
     usagePercent: Float,
     usagePercentDisplay: String,
     onEditClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     // Animate progress bar on first composition
     val animatedProgress by animateFloatAsState(
@@ -220,14 +227,26 @@ private fun BudgetSummaryCard(
             // Header row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.size(32.dp).offset(x = (-8).dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowBackIosNew,
+                        contentDescription = "Back",
+                        tint = TextPrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
                 Text(
-                    text = "Monthly Budget",
+                    text = budgetName,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    modifier = Modifier.weight(1f)
                 )
 
                 // Remaining pill

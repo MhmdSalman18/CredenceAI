@@ -6,7 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "budgets")
 data class BudgetEntity(
     @PrimaryKey
-    val id: String = "monthly_budget", // Simple case: only one active monthly budget
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String = "My Budget",
     val totalBudget: Double,
     val autoDistribute: Boolean,
     val repeatEveryMonth: Boolean,

@@ -23,6 +23,8 @@ data class BudgetCategory(
 )
 
 data class EditBudgetUiState(
+    val budgetId: String = java.util.UUID.randomUUID().toString(),
+    val budgetName: String = "My Budget",
     val totalBudget: String = "20000",
     val autoDistribute: Boolean = true,
     val repeatEveryMonth: Boolean = true,
@@ -48,19 +50,29 @@ private fun defaultCategories() = listOf(
 
 @HiltViewModel
 class EditBudgetViewModel @Inject constructor(
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
+
+    private val budgetId: String = savedStateHandle["budgetId"] ?: "new"
 
     private val _uiState = MutableStateFlow(EditBudgetUiState())
     val uiState: StateFlow<EditBudgetUiState> = _uiState.asStateFlow()
 
     init {
-        // Load existing budget if any
+        if (budgetId != "new") {
+            _uiState.update { it.copy(budgetId = budgetId) }
+            loadExistingBudget()
+        }
+    }
+
+    private fun loadExistingBudget() {
         viewModelScope.launch {
-            budgetRepository.getBudget("monthly_budget").collect { budgetWithCats ->
+            budgetRepository.getBudget(budgetId).collect { budgetWithCats ->
                 budgetWithCats?.let { data ->
                     _uiState.update { state ->
                         state.copy(
+                            budgetName = data.budget.name,
                             totalBudget = data.budget.totalBudget.toInt().toString(),
                             autoDistribute = data.budget.autoDistribute,
                             repeatEveryMonth = data.budget.repeatEveryMonth,
@@ -82,6 +94,10 @@ class EditBudgetViewModel @Inject constructor(
             val updated = state.copy(totalBudget = cleaned)
             if (state.autoDistribute) updated.withAutoDistributed() else updated
         }
+    }
+
+    fun onBudgetNameChanged(name: String) {
+        _uiState.update { it.copy(budgetName = name) }
     }
 
     // ── Toggles ──────────────────────────────────────────────────────────────
@@ -140,6 +156,8 @@ class EditBudgetViewModel @Inject constructor(
             try {
                 val currentState = _uiState.value
                 val budget = BudgetEntity(
+                    id = currentState.budgetId,
+                    name = currentState.budgetName.ifBlank { "My Budget" },
                     totalBudget = currentState.totalBudgetAsDouble,
                     autoDistribute = currentState.autoDistribute,
                     repeatEveryMonth = currentState.repeatEveryMonth
@@ -147,7 +165,7 @@ class EditBudgetViewModel @Inject constructor(
                 val categories = currentState.categories.map {
                     BudgetCategoryEntity(
                         id = it.id,
-                        budgetId = "monthly_budget",
+                        budgetId = currentState.budgetId,
                         name = it.name,
                         iconEmoji = it.iconEmoji,
                         allocatedAmount = it.allocatedAmount
@@ -172,6 +190,10 @@ class EditBudgetViewModel @Inject constructor(
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    fun withAutoDistributed() {
+        _uiState.update { it.withAutoDistributed() }
+    }
 
     private fun EditBudgetUiState.withAutoDistributed(): EditBudgetUiState {
         val count = categories.size

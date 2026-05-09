@@ -37,6 +37,7 @@ data class BudgetCategoryProgress(
 }
 
 data class ViewBudgetUiState(
+    val budgetName: String = "My Budget",
     val totalBudget: Double = 0.0,
     val remainingBudget: Double = 0.0,
     val usagePercent: Float = 0f,
@@ -53,21 +54,26 @@ data class ViewBudgetUiState(
 
 @HiltViewModel
 class ViewBudgetViewModel @Inject constructor(
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
+
+    private val budgetId: String = savedStateHandle["budgetId"] ?: ""
 
     private val _uiState = MutableStateFlow(ViewBudgetUiState())
     val uiState: StateFlow<ViewBudgetUiState> = _uiState.asStateFlow()
 
     init {
-        loadBudget()
+        if (budgetId.isNotEmpty()) {
+            loadBudget(budgetId)
+        }
     }
 
-    fun loadBudget() {
+    fun loadBudget(id: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                budgetRepository.getBudget("monthly_budget").collect { budgetWithCats ->
+                budgetRepository.getBudget(id).collect { budgetWithCats ->
                     if (budgetWithCats != null) {
                         val totalBudget = budgetWithCats.budget.totalBudget
                         val categories = budgetWithCats.categories.map {
@@ -87,6 +93,7 @@ class ViewBudgetViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
+                                budgetName = budgetWithCats.budget.name,
                                 totalBudget = totalBudget,
                                 remainingBudget = remainingBudget,
                                 usagePercent = usagePercent,
