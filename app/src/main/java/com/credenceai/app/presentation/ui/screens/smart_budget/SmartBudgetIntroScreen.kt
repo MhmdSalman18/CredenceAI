@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,11 +25,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +41,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,7 +51,6 @@ import kotlinx.coroutines.launch
 
 // ─── Brand Colors ────────────────────────────────────────────────────────────
 private val BrandBlue = Color(0xFF2A1DC4)
-private val BrandBlueDark = Color(0xFF1A0F9C)
 private val BackgroundLight = Color(0xFFF5F5FA)
 private val SurfaceWhite = Color(0xFFFFFFFF)
 private val TextPrimary = Color(0xFF0D0D1A)
@@ -75,7 +70,6 @@ private val HeroGradient = Brush.linearGradient(
 fun SmartBudgetIntroScreen(
     onSetMonthlyBudget: () -> Unit = {},
     onLearnHowItWorks: () -> Unit = {},
-    // Replace with your actual coil/glide image composable; using a placeholder here
     heroPainter: Painter? = null,
 ) {
     val scrollState = rememberScrollState()
@@ -111,10 +105,8 @@ fun SmartBudgetIntroScreen(
             .background(BackgroundLight)
             .verticalScroll(scrollState)
     ) {
-        // ── Top Bar ──────────────────────────────────────────────────────────
-        TopBar()
-
         // ── Hero Section ─────────────────────────────────────────────────────
+        // Note: TopBar removed — shared TopAppBar from MainScreen's Scaffold is used instead.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -128,7 +120,7 @@ fun SmartBudgetIntroScreen(
                     .background(HeroGradient)
             )
 
-            // Hero image — swap painterResource(R.drawable.img_piggy_bank) for your actual res
+            // Hero image
             if (heroPainter != null) {
                 androidx.compose.foundation.Image(
                     painter = heroPainter,
@@ -137,7 +129,6 @@ fun SmartBudgetIntroScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
-                // Placeholder when no image provided (dev preview)
                 HeroPlaceholderContent()
             }
 
@@ -248,60 +239,6 @@ fun SmartBudgetIntroScreen(
     }
 }
 
-// ─── Top Bar ──────────────────────────────────────────────────────────────────
-@Composable
-private fun TopBar() {
-    Surface(
-        color = SurfaceWhite,
-        shadowElevation = 0.dp,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Avatar — replace with AsyncImage / coil for real user photo
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE8EAF6)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "C",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = BrandBlue
-                    )
-                }
-
-                Spacer(Modifier.width(10.dp))
-
-                Text(
-                    text = "CredenceAI",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandBlue
-                )
-            }
-
-            IconButton(onClick = { /* navigate to notifications */ }) {
-                Icon(
-                    imageVector = Icons.Outlined.NotificationsNone,
-                    contentDescription = "Notifications",
-                    tint = BrandBlue,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
 // ─── Floating Badge ───────────────────────────────────────────────────────────
 @Composable
 private fun FloatingBadge(
@@ -340,7 +277,6 @@ private fun HeroPlaceholderContent() {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Simple decorative piggy bank stand-in using shapes
             Box(
                 modifier = Modifier
                     .size(90.dp)

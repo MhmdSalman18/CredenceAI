@@ -45,7 +45,6 @@ fun MainScreen(
     val startDestination by viewModel.startDestination.collectAsState()
 
     if (startDestination == null) {
-        // Show splash or loading if needed
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -63,7 +62,6 @@ fun MainScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDatePicker = false
-                    // TODO: Handle selected date in ViewModels or State
                 }) {
                     Text("OK")
                 }
@@ -85,12 +83,13 @@ fun MainScreen(
         BottomNavItem.Settings
     )
 
-    // Track current route to hide bottom bar on AddExpense and AddIncome screen
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route || 
-                     currentRoute == ScreenRoutes.AddIncome.route ||
-                     currentRoute == ScreenRoutes.SmartBudget.route
+
+    // Only hide bars for full-screen add/edit flows
+    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route ||
+            currentRoute == ScreenRoutes.AddIncome.route
+
     val showBottomBar = !isAddScreen
     val showTopBar = !isAddScreen
 
@@ -100,10 +99,12 @@ fun MainScreen(
         BottomNavItem.Analytics.route -> "Analytics"
         BottomNavItem.Settings.route -> "Settings"
         ScreenRoutes.Notifications.route -> "Notifications"
+        ScreenRoutes.SmartBudget.route -> "Smart Budget"
         else -> "CredenceAI"
     }
 
-    val showLogo = currentRoute == BottomNavItem.Home.route || currentRoute == ScreenRoutes.Home.route
+    val showLogo = currentRoute == BottomNavItem.Home.route ||
+            currentRoute == ScreenRoutes.Home.route
 
     val backgroundColor = MaterialTheme.colorScheme.background
 
@@ -142,14 +143,20 @@ fun MainScreen(
                     items.forEach { item ->
                         NavigationBarItem(
                             selected = currentRoute == item.route,
-                            onClick  = {
+                            onClick = {
                                 navController.navigate(item.route) {
-                                    popUpTo(startDestination!!) { saveState = true }
+                                    // Use the graph's start destination ID so the pop
+                                    // always targets the true root. Don't save/restore state for Home
+                                    // so clicking Dashboard always goes straight to the home screen.
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = item.route != BottomNavItem.Home.route
+                                        inclusive = false
+                                    }
                                     launchSingleTop = true
-                                    restoreState = true
+                                    restoreState = item.route != BottomNavItem.Home.route
                                 }
                             },
-                            icon  = { Icon(item.icon, contentDescription = item.label) },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
                             label = { Text(item.label) }
                         )
                     }
@@ -160,9 +167,9 @@ fun MainScreen(
     ) { innerPadding ->
 
         NavHost(
-            navController    = navController,
+            navController = navController,
             startDestination = startDestination!!,
-            modifier         = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding)
         ) {
 
             composable(ScreenRoutes.Home.route) {
@@ -171,7 +178,16 @@ fun MainScreen(
                         navController.navigate(ScreenRoutes.AddExpense.route)
                     },
                     onSmartBudget = {
-                        navController.navigate(ScreenRoutes.SmartBudget.route)
+                        // Navigate to SmartBudget WITHOUT saving Home's back-stack state
+                        // so that when the user switches tabs and returns to Dashboard,
+                        // the restored state is just HomeScreen — not Home + SmartBudget.
+                        navController.navigate(ScreenRoutes.SmartBudget.route) {
+                            popUpTo("home") {
+                                inclusive = false
+                                saveState = false
+                            }
+                            launchSingleTop = true
+                        }
                     },
                     onViewAllTransactions = {
                         navController.navigate("history")
@@ -214,19 +230,19 @@ fun MainScreen(
             composable(ScreenRoutes.AddExpense.route) {
                 AddExpenseScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onSaveSuccess  = { navController.popBackStack() }
+                    onSaveSuccess = { navController.popBackStack() }
                 )
             }
 
-            // Remove ScreenRoutes.AddIncome route if it exists and is no longer needed
-
-
             composable(ScreenRoutes.Transactions.route) { TransactionsScreen() }
             composable(ScreenRoutes.AddTransaction.route) { AddEditTransactionScreen() }
-            composable(ScreenRoutes.Uncategorized.route) { 
+
+            composable(ScreenRoutes.Uncategorized.route) {
                 UncategorizedScreen(
                     onEditTransaction = { id, amount, merchant, timestamp, type ->
-                        navController.navigate("${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type")
+                        navController.navigate(
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type"
+                        )
                     }
                 )
             }
@@ -241,14 +257,16 @@ fun MainScreen(
                     }
                 )
             }
-            composable("analytics") { 
+
+            composable("analytics") {
                 AnalyticsScreen(
                     onNavigateToUncategorized = {
                         navController.navigate(ScreenRoutes.Uncategorized.route)
                     }
-                ) 
+                )
             }
-            composable("settings") { 
+
+            composable("settings") {
                 SettingsScreen(
                     onNavigateToSupportedBanks = {
                         navController.navigate(ScreenRoutes.SupportedBanks.route)
@@ -256,7 +274,7 @@ fun MainScreen(
                     onNavigateToUncategorized = {
                         navController.navigate(ScreenRoutes.Uncategorized.route)
                     }
-                ) 
+                )
             }
 
             composable(ScreenRoutes.SupportedBanks.route) {
