@@ -247,16 +247,6 @@ fun EditBudgetScreen(
                     onAmountChanged = viewModel::onCategoryAmountChanged
                 )
 
-                Spacer(Modifier.height(24.dp))
-
-                // ── Repeat Every Month Toggle ─────────────────────────────────
-                ToggleRow(
-                    title = "Repeat every month",
-                    subtitle = "Automatically reset budget on the 1st",
-                    checked = uiState.repeatEveryMonth,
-                    onCheckedChange = viewModel::onRepeatEveryMonthToggled
-                )
-
                 Spacer(Modifier.height(32.dp))
             }
 

@@ -27,7 +27,6 @@ data class EditBudgetUiState(
     val budgetName: String = "My Budget",
     val totalBudget: String = "20000",
     val autoDistribute: Boolean = true,
-    val repeatEveryMonth: Boolean = true,
     val categories: List<BudgetCategory> = defaultCategories(),
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
@@ -75,7 +74,6 @@ class EditBudgetViewModel @Inject constructor(
                             budgetName = data.budget.name,
                             totalBudget = data.budget.totalBudget.toInt().toString(),
                             autoDistribute = data.budget.autoDistribute,
-                            repeatEveryMonth = data.budget.repeatEveryMonth,
                             categories = data.categories.map {
                                 BudgetCategory(it.id, it.name, it.iconEmoji, it.allocatedAmount)
                             }
@@ -107,10 +105,6 @@ class EditBudgetViewModel @Inject constructor(
             val updated = state.copy(autoDistribute = enabled)
             if (enabled) updated.withAutoDistributed() else updated
         }
-    }
-
-    fun onRepeatEveryMonthToggled(enabled: Boolean) {
-        _uiState.update { it.copy(repeatEveryMonth = enabled) }
     }
 
     // ── Category Allocation ──────────────────────────────────────────────────
@@ -160,7 +154,7 @@ class EditBudgetViewModel @Inject constructor(
                     name = currentState.budgetName.ifBlank { "My Budget" },
                     totalBudget = currentState.totalBudgetAsDouble,
                     autoDistribute = currentState.autoDistribute,
-                    repeatEveryMonth = currentState.repeatEveryMonth
+                    repeatEveryMonth = false
                 )
                 val categories = currentState.categories.map {
                     BudgetCategoryEntity(
