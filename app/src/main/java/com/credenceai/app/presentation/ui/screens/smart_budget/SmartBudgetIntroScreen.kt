@@ -333,6 +333,9 @@ private fun ExistingBudgetsContent(
                 },
                 onDeleteClick = {
                     onDeleteBudget(budget.id)
+                },
+                onAddSpendClick = {
+                    onViewBudget(budget.id)
                 }
             )
             Spacer(Modifier.height(12.dp))
@@ -346,6 +349,7 @@ private fun BudgetSummaryCard(
     onCardClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onAddSpendClick: () -> Unit,
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -423,6 +427,18 @@ private fun BudgetSummaryCard(
                     )
                     
                     Row {
+                        IconButton(
+                            onClick = onAddSpendClick,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = "Add Spend",
+                                tint = BrandBlue,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
                         IconButton(
                             onClick = onEditClick,
                             modifier = Modifier.size(32.dp)

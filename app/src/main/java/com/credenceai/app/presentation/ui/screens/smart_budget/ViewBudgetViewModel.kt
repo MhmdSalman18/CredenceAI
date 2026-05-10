@@ -48,6 +48,8 @@ data class ViewBudgetUiState(
     val aiAdvice: String = "Set up your budget to get AI-powered financial advice.",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val isAddingSpend: Boolean = false,
+    val selectedCategoryForSpend: BudgetCategoryProgress? = null
 ) {
     val spentAmount: Double get() = totalBudget - remainingBudget
     val usagePercentDisplay: String get() = "${"%.1f".format(usagePercent * 100)}%"
@@ -163,5 +165,36 @@ class ViewBudgetViewModel @Inject constructor(
 
     fun onErrorDismissed() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun onAddSpendClick(category: BudgetCategoryProgress) {
+        _uiState.update { it.copy(isAddingSpend = true, selectedCategoryForSpend = category) }
+    }
+
+    fun onDismissAddSpend() {
+        _uiState.update { it.copy(isAddingSpend = false, selectedCategoryForSpend = null) }
+    }
+
+    fun onSaveSpend(amount: Double, note: String) {
+        val category = _uiState.value.selectedCategoryForSpend ?: return
+        viewModelScope.launch {
+            try {
+                val transaction = com.credenceai.app.domain.model.Transaction(
+                    amount = amount,
+                    type = "debit",
+                    merchant = category.name,
+                    dateTime = System.currentTimeMillis(),
+                    category = category.name,
+                    source = "MANUAL",
+                    note = note,
+                    paymentMode = "CASH",
+                    referenceId = "budget_manual_${System.currentTimeMillis()}"
+                )
+                transactionRepository.addTransaction(transaction)
+                onDismissAddSpend()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Failed to save spend: ${e.message}") }
+            }
+        }
     }
 }

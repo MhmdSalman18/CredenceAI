@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -96,6 +97,7 @@ fun EditBudgetScreen(
     val scrollState = rememberScrollState()
 
     var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var isDeleteMode by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
 
     // Entrance animation
@@ -196,9 +198,16 @@ fun EditBudgetScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     SectionLabel("Categories")
-                    AddCategoryButton(onClick = {
-                        showAddCategoryDialog = true
-                    })
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RemoveCategoryButton(
+                            isDeleteMode = isDeleteMode,
+                            onClick = { isDeleteMode = !isDeleteMode }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        AddCategoryButton(onClick = {
+                            showAddCategoryDialog = true
+                        })
+                    }
                 }
 
                 if (showAddCategoryDialog) {
@@ -244,7 +253,9 @@ fun EditBudgetScreen(
                 CategoryList(
                     categories = uiState.categories,
                     autoDistribute = uiState.autoDistribute,
-                    onAmountChanged = viewModel::onCategoryAmountChanged
+                    isDeleteMode = isDeleteMode,
+                    onAmountChanged = viewModel::onCategoryAmountChanged,
+                    onRemoveCategory = viewModel::onRemoveCategory
                 )
 
                 Spacer(Modifier.height(32.dp))
@@ -466,7 +477,9 @@ private fun SummaryItem(
 private fun CategoryList(
     categories: List<BudgetCategory>,
     autoDistribute: Boolean,
+    isDeleteMode: Boolean,
     onAmountChanged: (String, String) -> Unit,
+    onRemoveCategory: (String) -> Unit,
 ) {
     Surface(
         color = SurfaceWhite,
@@ -478,9 +491,11 @@ private fun CategoryList(
                 CategoryRow(
                     category = category,
                     readOnly = autoDistribute,
+                    isDeleteMode = isDeleteMode,
                     onAmountChanged = { newAmount ->
                         onAmountChanged(category.id, newAmount)
-                    }
+                    },
+                    onRemove = { onRemoveCategory(category.id) }
                 )
                 if (index < categories.lastIndex) {
                     HorizontalDivider(
@@ -498,7 +513,9 @@ private fun CategoryList(
 private fun CategoryRow(
     category: BudgetCategory,
     readOnly: Boolean,
+    isDeleteMode: Boolean,
     onAmountChanged: (String) -> Unit,
+    onRemove: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -506,6 +523,22 @@ private fun CategoryRow(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isDeleteMode) {
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Remove",
+                    tint = Color.Red.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
         // Icon circle
         Box(
             modifier = Modifier
@@ -570,6 +603,35 @@ private fun CategoryRow(
 }
 
 // ─── Add Category Button ──────────────────────────────────────────────────────
+
+@Composable
+private fun RemoveCategoryButton(isDeleteMode: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = if (isDeleteMode) Color.Red.copy(alpha = 0.1f) else Color(0xFFF0F0F8),
+        shape = RoundedCornerShape(8.dp),
+        tonalElevation = 0.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = null,
+                tint = if (isDeleteMode) Color.Red else TextSecondary,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = if (isDeleteMode) "Done" else "Remove",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isDeleteMode) Color.Red else TextSecondary
+            )
+        }
+    }
+}
 
 @Composable
 private fun AddCategoryButton(onClick: () -> Unit) {
