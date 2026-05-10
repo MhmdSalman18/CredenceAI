@@ -3,12 +3,15 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.domain.repository.BudgetRepository
+import com.credenceai.app.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -55,6 +58,7 @@ data class ViewBudgetUiState(
 @HiltViewModel
 class ViewBudgetViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
+    private val transactionRepository: TransactionRepository,
     savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
 
@@ -73,42 +77,86 @@ class ViewBudgetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                budgetRepository.getBudget(id).collect { budgetWithCats ->
+                combine(
+                    budgetRepository.getBudget(id),
+                    transactionRepository.getAllTransactions()
+                ) { budgetWithCats, transactions ->
                     if (budgetWithCats != null) {
+                        val currentCalendar = Calendar.getInstance()
+                        val currentMonth = currentCalendar.get(Calendar.MONTH)
+                        val currentYear = currentCalendar.get(Calendar.YEAR)
+
+                        // Filter transactions for the current month and non-income types
+                        val monthlyExpenses = transactions.filter {
+                            val cal = Calendar.getInstance().apply { timeInMillis = it.dateTime }
+                            cal.get(Calendar.MONTH) == currentMonth &&
+                                    cal.get(Calendar.YEAR) == currentYear &&
+                                    it.type.lowercase() !in listOf("credit", "income")
+                        }
+
                         val totalBudget = budgetWithCats.budget.totalBudget
-                        val categories = budgetWithCats.categories.map {
-                            // In a real app, spentAmount would come from TransactionRepository
+                        val categories = budgetWithCats.categories.map { category ->
+                            val spentInCategory = monthlyExpenses
+                                .filter { it.category?.equals(category.name, ignoreCase = true) == true }
+                                .sumOf { it.amount }
+
                             BudgetCategoryProgress(
-                                id = it.id,
-                                name = it.name,
-                                iconEmoji = it.iconEmoji,
-                                spentAmount = 0.0, // TODO: Link with transactions
-                                totalAmount = it.allocatedAmount
+                                id = category.id,
+                                name = category.name,
+                                iconEmoji = category.iconEmoji,
+                                spentAmount = spentInCategory,
+                                totalAmount = category.allocatedAmount
                             )
                         }
+
                         val spentTotal = categories.sumOf { it.spentAmount }
                         val remainingBudget = totalBudget - spentTotal
                         val usagePercent = if (totalBudget > 0) (spentTotal / totalBudget).toFloat() else 0f
 
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                budgetName = budgetWithCats.budget.name,
-                                totalBudget = totalBudget,
-                                remainingBudget = remainingBudget,
-                                usagePercent = usagePercent,
-                                categories = categories,
-                                aiAdvice = "You have set a budget of ₹${"%.0f".format(totalBudget)}. Track your expenses to see AI advice here."
-                            )
-                        }
+                        ViewBudgetUiState(
+                            isLoading = false,
+                            budgetName = budgetWithCats.budget.name,
+                            totalBudget = totalBudget,
+                            remainingBudget = remainingBudget,
+                            usagePercent = usagePercent,
+                            categories = categories,
+                            aiAdvice = generateAiAdvice(spentTotal, totalBudget, categories)
+                        )
                     } else {
-                        _uiState.update { it.copy(isLoading = false) }
+                        ViewBudgetUiState(isLoading = false)
                     }
+                }.collect { newState ->
+                    _uiState.value = newState
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = e.message ?: "Failed to load budget")
                 }
+            }
+        }
+    }
+
+    private fun generateAiAdvice(spent: Double, total: Double, categories: List<BudgetCategoryProgress>): String {
+        if (total <= 0) return "Set up your budget to get AI-powered financial advice."
+        
+        val percent = (spent / total)
+        val overBudget = categories.filter { it.spentAmount > it.totalAmount }
+        
+        return when {
+            overBudget.isNotEmpty() -> {
+                "You've exceeded your budget in ${overBudget.size} categories: ${overBudget.joinToString { it.name }}. Consider reducing spending elsewhere."
+            }
+            percent > 0.9 -> {
+                "You've used ${"%.0f".format(percent * 100)}% of your total budget. Be careful with your spending for the rest of the month."
+            }
+            percent > 0.5 -> {
+                "You're halfway through your budget. You're doing okay, but keep an eye on your categories."
+            }
+            spent > 0 -> {
+                "Great start! You're well within your budget. Keep tracking your expenses."
+            }
+            else -> {
+                "You haven't recorded any expenses for this budget yet. Start tracking to see your progress!"
             }
         }
     }

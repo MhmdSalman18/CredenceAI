@@ -9,4 +9,5 @@ interface BudgetRepository {
     fun getAllBudgets(): Flow<List<BudgetWithCategories>>
     fun getBudget(budgetId: String): Flow<BudgetWithCategories?>
     suspend fun saveBudget(budget: BudgetEntity, categories: List<BudgetCategoryEntity>)
+    suspend fun deleteBudget(budgetId: String)
 }

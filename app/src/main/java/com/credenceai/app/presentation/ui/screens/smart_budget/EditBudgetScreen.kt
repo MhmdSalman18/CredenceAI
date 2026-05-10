@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +39,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -45,6 +47,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -91,6 +94,9 @@ fun EditBudgetScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
+
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
 
     // Entrance animation
     val bodyAlpha = remember { Animatable(0f) }
@@ -191,9 +197,46 @@ fun EditBudgetScreen(
                 ) {
                     SectionLabel("Categories")
                     AddCategoryButton(onClick = {
-                        // TODO: show dialog / bottom sheet for category name input
-                        viewModel.onAddCategory("New Category")
+                        showAddCategoryDialog = true
                     })
+                }
+
+                if (showAddCategoryDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAddCategoryDialog = false },
+                        title = { Text("Add Category") },
+                        text = {
+                            Column {
+                                Text("Enter a name for the new category:", fontSize = 14.sp)
+                                Spacer(Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = newCategoryName,
+                                    onValueChange = { newCategoryName = it },
+                                    placeholder = { Text("e.g. Entertainment") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    if (newCategoryName.isNotBlank()) {
+                                        viewModel.onAddCategory(newCategoryName)
+                                        newCategoryName = ""
+                                        showAddCategoryDialog = false
+                                    }
+                                }
+                            ) {
+                                Text("Add")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showAddCategoryDialog = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -504,8 +547,9 @@ private fun CategoryRow(
         Spacer(Modifier.width(4.dp))
 
         // Amount input
+        val amountStr = if (category.allocatedAmount == 0.0) "" else "%.0f".format(category.allocatedAmount)
         BasicTextField(
-            value = "%,.0f".format(category.allocatedAmount),
+            value = amountStr,
             onValueChange = { onAmountChanged(it) },
             enabled = !readOnly,
             textStyle = TextStyle(
@@ -517,7 +561,20 @@ private fun CategoryRow(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             cursorBrush = SolidColor(BrandBlue),
             singleLine = true,
-            modifier = Modifier.width(64.dp)
+            modifier = Modifier.width(80.dp),
+            decorationBox = { inner ->
+                if (amountStr.isEmpty()) {
+                    Text(
+                        "0",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextHint,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                inner()
+            }
         )
     }
 }
@@ -526,47 +583,11 @@ private fun CategoryRow(
 
 @Composable
 private fun AddCategoryButton(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFEEEDFE))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            tint = BrandBlue,
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = "Add Category",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = BrandBlue,
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .padding(0.dp)
-                .let { mod ->
-                    // Tap handled by parent Box
-                    mod
-                }
-        )
-    }
-    // Wrap the whole pill in a clickable surface at call site using a Box if needed
-    // Alternatively refactor AddCategoryButton to be fully clickable
-    LaunchedEffect(Unit) { /* no-op */ }
-}
-
-// Standalone clickable version used in the screen
-@Composable
-private fun AddCategoryButtonClickable(onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         color = Color(0xFFEEEDFE),
         shape = RoundedCornerShape(8.dp),
-        tonalElevation = 0.dp,
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -583,7 +604,7 @@ private fun AddCategoryButtonClickable(onClick: () -> Unit) {
                 text = "Add Category",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = BrandBlue,
+                color = BrandBlue
             )
         }
     }

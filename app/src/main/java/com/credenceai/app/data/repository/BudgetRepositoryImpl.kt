@@ -23,4 +23,8 @@ class BudgetRepositoryImpl @Inject constructor(
     override suspend fun saveBudget(budget: BudgetEntity, categories: List<BudgetCategoryEntity>) {
         budgetDao.saveBudget(budget, categories)
     }
+
+    override suspend fun deleteBudget(budgetId: String) {
+        budgetDao.deleteBudgetWithCategories(budgetId)
+    }
 }

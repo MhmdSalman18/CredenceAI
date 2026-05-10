@@ -292,7 +292,13 @@ fun MainScreen(
             composable(ScreenRoutes.SmartBudget.route) {
                 SmartBudgetIntroScreen(
                     onSetMonthlyBudget = {
-                        navController.navigate(ScreenRoutes.EditBudget.route)
+                        navController.navigate(ScreenRoutes.EditBudget.createRoute("new"))
+                    },
+                    onViewBudget = { budgetId ->
+                        navController.navigate(ScreenRoutes.ViewBudget.createRoute(budgetId))
+                    },
+                    onEditBudget = { budgetId ->
+                        navController.navigate(ScreenRoutes.EditBudget.createRoute(budgetId))
                     },
                     onLearnHowItWorks = {
                         // Handle learn more
@@ -300,23 +306,41 @@ fun MainScreen(
                 )
             }
 
-            composable(ScreenRoutes.EditBudget.route) {
+            composable(
+                route = ScreenRoutes.EditBudget.route,
+                arguments = listOf(
+                    navArgument("budgetId") {
+                        type = androidx.navigation.NavType.StringType
+                        defaultValue = "new"
+                    }
+                )
+            ) {
                 EditBudgetScreen(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
                     onBudgetSaved = {
-                        navController.navigate(ScreenRoutes.ViewBudget.route) {
-                            popUpTo(ScreenRoutes.SmartBudget.route) { inclusive = true }
-                        }
+                        // Return to intro screen to refresh list
+                        navController.popBackStack()
                     }
                 )
             }
 
-            composable(ScreenRoutes.ViewBudget.route) {
+            composable(
+                route = ScreenRoutes.ViewBudget.route,
+                arguments = listOf(
+                    navArgument("budgetId") {
+                        type = androidx.navigation.NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val budgetId = backStackEntry.arguments?.getString("budgetId") ?: ""
                 ViewBudgetScreen(
                     onEditBudget = {
-                        navController.navigate(ScreenRoutes.EditBudget.route)
+                        navController.navigate(ScreenRoutes.EditBudget.createRoute(budgetId))
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }

@@ -34,4 +34,13 @@ interface BudgetDao {
 
     @Query("DELETE FROM budget_categories WHERE budgetId = :budgetId")
     suspend fun deleteCategoriesForBudget(budgetId: String)
+
+    @Query("DELETE FROM budgets WHERE id = :budgetId")
+    suspend fun deleteBudgetById(budgetId: String)
+
+    @Transaction
+    suspend fun deleteBudgetWithCategories(budgetId: String) {
+        deleteCategoriesForBudget(budgetId)
+        deleteBudgetById(budgetId)
+    }
 }

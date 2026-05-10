@@ -41,6 +41,9 @@ fun NavGraph() {
                 },
                 onViewBudget = { budgetId ->
                     navController.navigate(ScreenRoutes.ViewBudget.createRoute(budgetId))
+                },
+                onEditBudget = { budgetId ->
+                    navController.navigate(ScreenRoutes.EditBudget.createRoute(budgetId))
                 }
             )
         }

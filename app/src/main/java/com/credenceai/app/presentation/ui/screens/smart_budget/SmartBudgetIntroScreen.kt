@@ -31,16 +31,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -74,6 +81,7 @@ fun SmartBudgetIntroScreen(
     viewModel: SmartBudgetIntroViewModel = hiltViewModel(),
     onSetMonthlyBudget: () -> Unit = {},
     onViewBudget: (String) -> Unit = {},
+    onEditBudget: (String) -> Unit = {},
     onLearnHowItWorks: () -> Unit = {},
     heroPainter: Painter? = null,
 ) {
@@ -179,8 +187,6 @@ fun SmartBudgetIntroScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset { IntOffset(0, contentOffset.value.dp.roundToPx()) }
-                .alpha(contentAlpha.value)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -193,6 +199,8 @@ fun SmartBudgetIntroScreen(
                 ExistingBudgetsContent(
                     budgets = uiState.existingBudgets,
                     onViewBudget = onViewBudget,
+                    onEditBudget = onEditBudget,
+                    onDeleteBudget = { viewModel.deleteBudget(it) },
                     onAddNewBudget = onSetMonthlyBudget
                 )
             }
@@ -273,6 +281,8 @@ private fun EmptyBudgetContent(
 private fun ExistingBudgetsContent(
     budgets: List<ExistingBudgetSummary>,
     onViewBudget: (String) -> Unit,
+    onEditBudget: (String) -> Unit,
+    onDeleteBudget: (String) -> Unit,
     onAddNewBudget: () -> Unit
 ) {
     Column(
@@ -315,7 +325,15 @@ private fun ExistingBudgetsContent(
         budgets.forEach { budget ->
             BudgetSummaryCard(
                 budget = budget,
-                onClick = { onViewBudget(budget.id) }
+                onCardClick = { 
+                    onViewBudget(budget.id) 
+                },
+                onEditClick = { 
+                    onEditBudget(budget.id) 
+                },
+                onDeleteClick = {
+                    onDeleteBudget(budget.id)
+                }
             )
             Spacer(Modifier.height(12.dp))
         }
@@ -325,10 +343,39 @@ private fun ExistingBudgetsContent(
 @Composable
 private fun BudgetSummaryCard(
     budget: ExistingBudgetSummary,
-    onClick: () -> Unit
+    onCardClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Budget") },
+            text = { Text("Are you sure you want to delete '${budget.name}'? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Surface(
-        onClick = onClick,
+        onClick = {
+            onCardClick()
+        },
         color = SurfaceWhite,
         shape = RoundedCornerShape(16.dp),
         tonalElevation = 2.dp,
@@ -366,12 +413,42 @@ private fun BudgetSummaryCard(
                 )
             }
 
-            Text(
-                text = "₹${"%,.0f".format(budget.totalBudget)}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = BrandBlue
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "₹${"%,.0f".format(budget.totalBudget)}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandBlue
+                    )
+                    
+                    Row {
+                        IconButton(
+                            onClick = onEditClick,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit Budget",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Delete Budget",
+                                tint = Color.Red.copy(alpha = 0.7f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
