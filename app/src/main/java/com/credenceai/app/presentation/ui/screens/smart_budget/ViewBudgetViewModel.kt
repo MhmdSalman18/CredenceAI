@@ -49,7 +49,9 @@ data class ViewBudgetUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isAddingSpend: Boolean = false,
-    val selectedCategoryForSpend: BudgetCategoryProgress? = null
+    val showTransactionList: Boolean = false,
+    val selectedCategoryForSpend: BudgetCategoryProgress? = null,
+    val selectedCategoryTransactions: List<com.credenceai.app.domain.model.Transaction> = emptyList()
 ) {
     val spentAmount: Double get() = totalBudget - remainingBudget
     val usagePercentDisplay: String get() = "${"%.1f".format(usagePercent * 100)}%"
@@ -69,6 +71,8 @@ class ViewBudgetViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ViewBudgetUiState())
     val uiState: StateFlow<ViewBudgetUiState> = _uiState.asStateFlow()
 
+    private var allTransactions: List<com.credenceai.app.domain.model.Transaction> = emptyList()
+
     init {
         if (budgetId.isNotEmpty()) {
             loadBudget(budgetId)
@@ -83,6 +87,7 @@ class ViewBudgetViewModel @Inject constructor(
                     budgetRepository.getBudget(id),
                     transactionRepository.getAllTransactions()
                 ) { budgetWithCats, transactions ->
+                    allTransactions = transactions
                     if (budgetWithCats != null) {
                         val currentCalendar = Calendar.getInstance()
                         val currentMonth = currentCalendar.get(Calendar.MONTH)
@@ -171,8 +176,45 @@ class ViewBudgetViewModel @Inject constructor(
         _uiState.update { it.copy(isAddingSpend = true, selectedCategoryForSpend = category) }
     }
 
+    fun onCategoryClick(category: BudgetCategoryProgress) {
+        val currentCalendar = Calendar.getInstance()
+        val currentMonth = currentCalendar.get(Calendar.MONTH)
+        val currentYear = currentCalendar.get(Calendar.YEAR)
+
+        val transactions = allTransactions.filter {
+            val cal = Calendar.getInstance().apply { timeInMillis = it.dateTime }
+            cal.get(Calendar.MONTH) == currentMonth &&
+                    cal.get(Calendar.YEAR) == currentYear &&
+                    it.category?.equals(category.name, ignoreCase = true) == true &&
+                    it.type.lowercase() !in listOf("credit", "income")
+        }
+        
+        _uiState.update { 
+            it.copy(
+                showTransactionList = true, 
+                selectedCategoryForSpend = category,
+                selectedCategoryTransactions = transactions
+            ) 
+        }
+    }
+
+    fun onDismissTransactionList() {
+        _uiState.update { it.copy(showTransactionList = false, selectedCategoryForSpend = null, selectedCategoryTransactions = emptyList()) }
+    }
+
     fun onDismissAddSpend() {
         _uiState.update { it.copy(isAddingSpend = false, selectedCategoryForSpend = null) }
+    }
+
+    fun onDeleteTransaction(transaction: com.credenceai.app.domain.model.Transaction) {
+        viewModelScope.launch {
+            try {
+                transactionRepository.deleteTransaction(transaction)
+                // The combine in loadBudget will automatically update the UI
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Failed to delete transaction: ${e.message}") }
+            }
+        }
     }
 
     fun onSaveSpend(amount: Double, note: String) {
@@ -185,7 +227,7 @@ class ViewBudgetViewModel @Inject constructor(
                     merchant = category.name,
                     dateTime = System.currentTimeMillis(),
                     category = category.name,
-                    source = "MANUAL",
+                    source = "BUDGET",
                     note = note,
                     paymentMode = "CASH",
                     referenceId = "budget_manual_${System.currentTimeMillis()}"

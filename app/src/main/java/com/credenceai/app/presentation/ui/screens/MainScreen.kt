@@ -341,6 +341,11 @@ fun MainScreen(
                     },
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        navController.navigate(
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type"
+                        )
                     }
                 )
             }

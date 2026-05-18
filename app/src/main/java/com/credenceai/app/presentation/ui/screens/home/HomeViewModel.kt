@@ -66,8 +66,8 @@ class HomeViewModel @Inject constructor(
         getAllTransactionsUseCase(),
         preferencesManager.userName
     ) { allTransactions, name ->
-            // Filter out uncategorized transactions (captured from notifications but not yet saved/reviewed)
-            val transactions = allTransactions.filter { it.category != null }
+            // Filter out uncategorized transactions and Budget specific transactions for Home Screen summary
+            val transactions = allTransactions.filter { it.category != null && it.source != "BUDGET" }
 
             val totalIncome = transactions.filter { it.type.lowercase() == "credit" || it.type.lowercase() == "income" }.sumOf { it.amount }
             val totalSpent = transactions.filter { it.type.lowercase() == "debit" || it.type.lowercase() == "expense" }.sumOf { it.amount }

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -38,6 +42,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
@@ -45,6 +50,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -65,11 +71,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // ─── Brand Colors ─────────────────────────────────────────────────────────────
 private val BrandBlue      = Color(0xFF2A1DC4)
-private val BrandBlueDark  = Color(0xFF1A0F9C)
 private val BackgroundPage = Color(0xFFF5F5FA)
 private val SurfaceWhite   = Color(0xFFFFFFFF)
 private val TextPrimary    = Color(0xFF0D0D1A)
@@ -89,6 +97,7 @@ private val AiBannerBg     = Color(0xFF2A1DC4)
 fun ViewBudgetScreen(
     viewModel: ViewBudgetViewModel = hiltViewModel(),
     onEditBudget: () -> Unit = {},
+    onEditTransaction: (Int, String, String, Long, String) -> Unit = { _, _, _, _, _ -> },
     onViewAnalytics: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
 ) {
@@ -177,7 +186,8 @@ fun ViewBudgetScreen(
                                 uiState.categories.forEachIndexed { index, category ->
                                     CategoryProgressRow(
                                         category = category,
-                                        onAddSpend = { viewModel.onAddSpendClick(category) }
+                                        onAddSpend = { viewModel.onAddSpendClick(category) },
+                                        onClick = { viewModel.onCategoryClick(category) }
                                     )
                                     if (index < uiState.categories.lastIndex) {
                                         HorizontalDivider(
@@ -209,6 +219,21 @@ fun ViewBudgetScreen(
             )
         }
 
+        if (uiState.showTransactionList && uiState.selectedCategoryForSpend != null) {
+            TransactionListBottomSheet(
+                categoryName = uiState.selectedCategoryForSpend!!.name,
+                transactions = uiState.selectedCategoryTransactions,
+                onDismiss = { viewModel.onDismissTransactionList() },
+                onEditTransaction = { tx ->
+                    viewModel.onDismissTransactionList()
+                    onEditTransaction(tx.id, tx.amount.toString(), tx.merchant ?: "", tx.dateTime, tx.type)
+                },
+                onDeleteTransaction = { tx ->
+                    viewModel.onDeleteTransaction(tx)
+                }
+            )
+        }
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -218,6 +243,7 @@ fun ViewBudgetScreen(
 
 // ─── Budget Summary Card ──────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BudgetSummaryCard(
     budgetName: String,
@@ -354,10 +380,12 @@ private fun BudgetSummaryCard(
 
 // ─── Category Progress Row ────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategoryProgressRow(
     category: BudgetCategoryProgress,
-    onAddSpend: () -> Unit
+    onAddSpend: () -> Unit,
+    onClick: () -> Unit
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = category.usagePercent,
@@ -379,6 +407,7 @@ private fun CategoryProgressRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -463,8 +492,109 @@ private fun CategoryProgressRow(
     }
 }
 
-// ─── AI Advice Banner ─────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TransactionListBottomSheet(
+    categoryName: String,
+    transactions: List<com.credenceai.app.domain.model.Transaction>,
+    onDismiss: () -> Unit,
+    onEditTransaction: (com.credenceai.app.domain.model.Transaction) -> Unit,
+    onDeleteTransaction: (com.credenceai.app.domain.model.Transaction) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+    val dateFormatter = remember { SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()) }
 
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = SurfaceWhite
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                text = "$categoryName Expenses",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+            )
+
+            if (transactions.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "No expenses recorded this month", color = TextSecondary)
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(transactions) { tx ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = tx.merchant ?: "Unknown",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = dateFormatter.format(Date(tx.dateTime)),
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                                if (!tx.note.isNullOrBlank()) {
+                                    Text(
+                                        text = tx.note,
+                                        fontSize = 12.sp,
+                                        color = TextSecondary,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "₹${"%.0f".format(tx.amount)}",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+
+                            IconButton(onClick = { onEditTransaction(tx) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Edit",
+                                    tint = BrandBlue,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            
+                            IconButton(onClick = { onDeleteTransaction(tx) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = "Delete",
+                                    tint = RedExceeded,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = BorderColor, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 20.dp))
+                    }
+                }
+            }
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddSpendDialog(

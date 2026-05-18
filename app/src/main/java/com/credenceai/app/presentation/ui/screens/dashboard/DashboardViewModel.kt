@@ -24,7 +24,9 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadTransactions() {
         viewModelScope.launch {
-            getAllTransactions().collect { list ->
+            getAllTransactions().collect { allList ->
+                // Filter out Budget specific transactions for Home Screen
+                val list = allList.filter { it.source != "BUDGET" }
 
                 val income = list
                     .filter { it.type == "credit" }
