@@ -225,12 +225,19 @@ fun ViewBudgetScreen(
                 transactions = uiState.selectedCategoryTransactions,
                 onDismiss = { viewModel.onDismissTransactionList() },
                 onEditTransaction = { tx ->
-                    viewModel.onDismissTransactionList()
-                    onEditTransaction(tx.id, tx.amount.toString(), tx.merchant ?: "", tx.dateTime, tx.type)
+                    viewModel.onEditTransactionClick(tx)
                 },
                 onDeleteTransaction = { tx ->
                     viewModel.onDeleteTransaction(tx)
                 }
+            )
+        }
+
+        if (uiState.isEditingTransaction && uiState.selectedTransactionToEdit != null) {
+            EditAmountDialog(
+                initialAmount = uiState.selectedTransactionToEdit!!.amount,
+                onDismiss = { viewModel.onDismissEditTransaction() },
+                onSave = { amount -> viewModel.onUpdateTransactionAmount(amount) }
             )
         }
 
@@ -674,6 +681,77 @@ private fun AddSpendDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Save")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditAmountDialog(
+    initialAmount: Double,
+    onDismiss: () -> Unit,
+    onSave: (Double) -> Unit
+) {
+    var amount by remember { mutableStateOf(initialAmount.toString()) }
+
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = SurfaceWhite,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Edit Amount",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
+                    label = { Text("Amount") },
+                    prefix = { Text("₹") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BrandBlue,
+                        focusedLabelColor = BrandBlue
+                    )
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel", color = TextSecondary)
+                    }
+                    Button(
+                        onClick = {
+                            val amt = amount.toDoubleOrNull() ?: 0.0
+                            if (amt > 0) onSave(amt)
+                        },
+                        enabled = amount.isNotEmpty() && (amount.toDoubleOrNull() ?: 0.0) > 0,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Update")
                     }
                 }
             }

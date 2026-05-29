@@ -49,8 +49,10 @@ data class ViewBudgetUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isAddingSpend: Boolean = false,
+    val isEditingTransaction: Boolean = false,
     val showTransactionList: Boolean = false,
     val selectedCategoryForSpend: BudgetCategoryProgress? = null,
+    val selectedTransactionToEdit: com.credenceai.app.domain.model.Transaction? = null,
     val selectedCategoryTransactions: List<com.credenceai.app.domain.model.Transaction> = emptyList()
 ) {
     val spentAmount: Double get() = totalBudget - remainingBudget
@@ -204,6 +206,26 @@ class ViewBudgetViewModel @Inject constructor(
 
     fun onDismissAddSpend() {
         _uiState.update { it.copy(isAddingSpend = false, selectedCategoryForSpend = null) }
+    }
+
+    fun onEditTransactionClick(transaction: com.credenceai.app.domain.model.Transaction) {
+        _uiState.update { it.copy(isEditingTransaction = true, selectedTransactionToEdit = transaction) }
+    }
+
+    fun onDismissEditTransaction() {
+        _uiState.update { it.copy(isEditingTransaction = false, selectedTransactionToEdit = null) }
+    }
+
+    fun onUpdateTransactionAmount(amount: Double) {
+        val transaction = _uiState.value.selectedTransactionToEdit ?: return
+        viewModelScope.launch {
+            try {
+                transactionRepository.updateTransaction(transaction.copy(amount = amount))
+                onDismissEditTransaction()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Failed to update transaction: ${e.message}") }
+            }
+        }
     }
 
     fun onDeleteTransaction(transaction: com.credenceai.app.domain.model.Transaction) {
