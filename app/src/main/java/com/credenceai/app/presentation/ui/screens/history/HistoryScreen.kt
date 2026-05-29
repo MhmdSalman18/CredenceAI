@@ -41,7 +41,8 @@ private val CreditGreen    = Color(0xFF27AE60)
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
     onAddExpense: () -> Unit = {},
-    onAddIncome: () -> Unit = {}
+    onAddIncome: () -> Unit = {},
+    onEditTransaction: (String, Double, String, Long, String) -> Unit = { _, _, _, _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -165,7 +166,10 @@ fun HistoryScreen(
                             items = group.transactions,
                             key   = { it.id }
                         ) { tx ->
-                            TransactionRow(tx)
+                            TransactionRow(tx, onClick = {
+                                val cleanAmount = tx.amount.replace("₹", "").replace("+", "").replace("-", "").trim().toDoubleOrNull() ?: 0.0
+                                onEditTransaction(tx.id, cleanAmount, tx.merchantName, tx.timestamp, if(tx.isCredit) "credit" else "debit")
+                            })
                         }
                     }
                 }
@@ -193,15 +197,17 @@ private fun DateHeader(label: String) {
 // ─── Transaction Row ──────────────────────────────────────────────────────────
 
 @Composable
-private fun TransactionRow(tx: TransactionItem) {
+private fun TransactionRow(tx: TransactionItem, onClick: () -> Unit = {}) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape  = RoundedCornerShape(14.dp),
         color  = MaterialTheme.colorScheme.surface,
-        shadowElevation = 1.dp
+        shadowElevation = 1.dp,
+        onClick = onClick
     ) {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()

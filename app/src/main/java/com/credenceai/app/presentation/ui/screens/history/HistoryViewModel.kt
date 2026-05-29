@@ -35,7 +35,8 @@ data class TransactionItem(
     val isCredit: Boolean,
     val icon: ImageVector,
     val iconTint: Color,
-    val iconBackground: Color
+    val iconBackground: Color,
+    val timestamp: Long = 0L
 )
 
 data class TransactionGroup(
@@ -148,7 +149,8 @@ class HistoryViewModel @Inject constructor(
             isCredit = isCredit,
             icon = getIconForCategory(categoryName),
             iconTint = getColorForCategory(categoryName),
-            iconBackground = getColorForCategory(categoryName).copy(alpha = 0.1f)
+            iconBackground = getColorForCategory(categoryName).copy(alpha = 0.1f),
+            timestamp = dateTime
         )
     }
 

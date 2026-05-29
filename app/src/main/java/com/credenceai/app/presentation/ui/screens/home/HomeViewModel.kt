@@ -46,6 +46,7 @@ data class HomeUiState(
     val budgetProgress: Float          = 0.0f,
     val categories: List<CategoryItem> = emptyList(),
     val recentTransactions: List<Transaction> = emptyList(),
+    val uncategorizedCount: Int        = 0,
     val isLoading: Boolean             = false,
     val errorMessage: String?          = null
 )
@@ -55,6 +56,7 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
+    private val getUncategorizedTransactionsUseCase: com.credenceai.app.domain.usecase.GetUncategorizedTransactionsUseCase,
     private val exportTransactionsUseCase: ExportTransactionsUseCase,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
@@ -64,8 +66,9 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         getAllTransactionsUseCase(),
+        getUncategorizedTransactionsUseCase(),
         preferencesManager.userName
-    ) { allTransactions, name ->
+    ) { allTransactions, uncategorized, name ->
             // Filter out uncategorized transactions and Budget specific transactions for Home Screen summary
             val transactions = allTransactions.filter { it.category != null && it.source != "BUDGET" }
 
@@ -100,6 +103,7 @@ class HomeViewModel @Inject constructor(
                 budgetProgress = if (totalIncome > 0) (totalSpent / totalIncome).toFloat().coerceIn(0f, 1f) else 0f,
                 categories = categories.sortedByDescending { it.amount.replace("₹", "").replace(",", "").toDoubleOrNull() ?: 0.0 },
                 recentTransactions = recent,
+                uncategorizedCount = uncategorized.size,
                 isLoading = false
             )
         }.stateIn(

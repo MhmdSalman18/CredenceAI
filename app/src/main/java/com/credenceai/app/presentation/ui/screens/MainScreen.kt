@@ -196,6 +196,15 @@ fun MainScreen(
                     },
                     onNotificationsClick = {
                         navController.navigate(ScreenRoutes.Notifications.route)
+                    },
+                    onNavigateToUncategorized = {
+                        navController.navigate(ScreenRoutes.Uncategorized.route)
+                    },
+                    onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        val encodedMerchant = URLEncoder.encode(merchant, StandardCharsets.UTF_8.toString())
+                        navController.navigate(
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$encodedMerchant&timestamp=$timestamp&type=$type"
+                        )
                     }
                 )
             }
@@ -257,6 +266,12 @@ fun MainScreen(
                     },
                     onAddIncome = {
                         navController.navigate(ScreenRoutes.AddIncome.route)
+                    },
+                    onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        val encodedMerchant = URLEncoder.encode(merchant, StandardCharsets.UTF_8.toString())
+                        navController.navigate(
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$encodedMerchant&timestamp=$timestamp&type=$type"
+                        )
                     }
                 )
             }
@@ -288,7 +303,13 @@ fun MainScreen(
 
             composable(ScreenRoutes.Notifications.route) {
                 NotificationsScreen(
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        val encodedMerchant = URLEncoder.encode(merchant, StandardCharsets.UTF_8.toString())
+                        navController.navigate(
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$encodedMerchant&timestamp=$timestamp&type=$type"
+                        )
+                    }
                 )
             }
 

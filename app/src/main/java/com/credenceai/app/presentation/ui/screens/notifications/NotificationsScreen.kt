@@ -1,6 +1,7 @@
 package com.credenceai.app.presentation.ui.screens.notifications
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,6 +28,7 @@ import java.util.*
 @Composable
 fun NotificationsScreen(
     onBackClick: () -> Unit,
+    onEditTransaction: (Int, String, String, Long, String) -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
     val notifications by viewModel.notifications.collectAsState()
@@ -72,7 +74,18 @@ fun NotificationsScreen(
                     .padding(padding)
             ) {
                 items(notifications) { transaction ->
-                    NotificationItem(transaction)
+                    NotificationItem(
+                        transaction = transaction,
+                        onClick = {
+                            onEditTransaction(
+                                transaction.id,
+                                transaction.amount.toString(),
+                                transaction.merchant ?: "",
+                                transaction.dateTime,
+                                transaction.type
+                            )
+                        }
+                    )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         thickness = 0.5.dp,
@@ -85,10 +98,14 @@ fun NotificationsScreen(
 }
 
 @Composable
-fun NotificationItem(transaction: Transaction) {
+fun NotificationItem(
+    transaction: Transaction,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

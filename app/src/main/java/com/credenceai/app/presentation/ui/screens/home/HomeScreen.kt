@@ -60,7 +60,9 @@ fun HomeScreen(
     onAddExpense: () -> Unit = {},
     onSmartBudget: () -> Unit = {},
     onViewAllTransactions: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {}
+    onNotificationsClick: () -> Unit = {},
+    onNavigateToUncategorized: () -> Unit = {},
+    onEditTransaction: (String, Double, String, Long, String) -> Unit = { _, _, _, _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -93,6 +95,14 @@ fun HomeScreen(
                 onNotificationsClick = onNotificationsClick
             )
             SummaryCard(uiState = uiState)
+            
+            if (uiState.uncategorizedCount > 0) {
+                UncategorizedBanner(
+                    count = uiState.uncategorizedCount,
+                    onClick = onNavigateToUncategorized
+                )
+            }
+
             QuickActionsRow(
                 onAddExpense   = onAddExpense,
                 onSmartBudget  = onSmartBudget,
@@ -100,7 +110,16 @@ fun HomeScreen(
             )
             RecentTransactionsSection(
                 transactions = uiState.recentTransactions,
-                onViewAll = onViewAllTransactions
+                onViewAll = onViewAllTransactions,
+                onTransactionClick = { tx ->
+                    onEditTransaction(
+                        tx.id.toString(),
+                        tx.amount,
+                        tx.merchant ?: "Unknown",
+                        tx.dateTime,
+                        tx.type
+                    )
+                }
             )
             CategoriesSection(
                 categories = uiState.categories,
@@ -148,12 +167,65 @@ private fun HeaderSection(
     }
 }
 
+@Composable
+private fun UncategorizedBanner(
+    count: Int,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Uncategorized Activity",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "You have $count transactions to review",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.Add, // Using Add as a placeholder for Chevron or similar
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
 // ─── Recent Transactions Section ─────────────────────────────────────────────
 
 @Composable
 private fun RecentTransactionsSection(
     transactions: List<Transaction>,
-    onViewAll: () -> Unit
+    onViewAll: () -> Unit,
+    onTransactionClick: (Transaction) -> Unit = {}
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(
@@ -193,7 +265,7 @@ private fun RecentTransactionsSection(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 transactions.forEach { transaction ->
-                    TransactionItem(transaction = transaction)
+                    TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction) })
                 }
             }
         }
@@ -201,7 +273,7 @@ private fun RecentTransactionsSection(
 }
 
 @Composable
-private fun TransactionItem(transaction: Transaction) {
+private fun TransactionItem(transaction: Transaction, onClick: () -> Unit = {}) {
     val isExpense = transaction.type.lowercase() == "debit" || transaction.type.lowercase() == "expense"
     val amountColor = if (isExpense) Color(0xFFE05252) else Color(0xFF4CD964)
     val amountPrefix = if (isExpense) "-" else "+"
@@ -212,7 +284,8 @@ private fun TransactionItem(transaction: Transaction) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
