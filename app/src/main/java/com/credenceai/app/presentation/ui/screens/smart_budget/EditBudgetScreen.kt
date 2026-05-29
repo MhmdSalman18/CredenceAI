@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,6 +100,8 @@ fun EditBudgetScreen(
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var isDeleteMode by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
+    var selectedEmoji by remember { mutableStateOf("📂") }
+    val emojiList = listOf("🍴", "🚗", "🧾", "🛍", "🏠", "🎁", "💊", "🎮", "📚", "📂")
 
     // Entrance animation
     val bodyAlpha = remember { Animatable(0f) }
@@ -216,7 +219,36 @@ fun EditBudgetScreen(
                         title = { Text("Add Category") },
                         text = {
                             Column {
-                                Text("Enter a name for the new category:", fontSize = 14.sp)
+                                Text("Select an icon:", fontSize = 14.sp)
+                                Spacer(Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    emojiList.take(5).forEach { emoji ->
+                                        EmojiSelectionItem(
+                                            emoji = emoji,
+                                            isSelected = selectedEmoji == emoji,
+                                            onSelect = { selectedEmoji = emoji }
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    emojiList.drop(5).forEach { emoji ->
+                                        EmojiSelectionItem(
+                                            emoji = emoji,
+                                            isSelected = selectedEmoji == emoji,
+                                            onSelect = { selectedEmoji = emoji }
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(16.dp))
+                                Text("Enter category name:", fontSize = 14.sp)
                                 Spacer(Modifier.height(8.dp))
                                 OutlinedTextField(
                                     value = newCategoryName,
@@ -231,8 +263,9 @@ fun EditBudgetScreen(
                             TextButton(
                                 onClick = {
                                     if (newCategoryName.isNotBlank()) {
-                                        viewModel.onAddCategory(newCategoryName)
+                                        viewModel.onAddCategory(newCategoryName, selectedEmoji)
                                         newCategoryName = ""
+                                        selectedEmoji = "📂"
                                         showAddCategoryDialog = false
                                     }
                                 }
@@ -599,6 +632,29 @@ private fun CategoryRow(
                 inner()
             }
         )
+    }
+}
+
+@Composable
+private fun EmojiSelectionItem(
+    emoji: String,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.Transparent)
+            .border(
+                width = 1.dp,
+                color = if (isSelected) BrandBlue else BorderColor,
+                shape = CircleShape
+            )
+            .clickable { onSelect() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = emoji, fontSize = 18.sp)
     }
 }
 

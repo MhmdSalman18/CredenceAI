@@ -225,7 +225,15 @@ fun ViewBudgetScreen(
                 transactions = uiState.selectedCategoryTransactions,
                 onDismiss = { viewModel.onDismissTransactionList() },
                 onEditTransaction = { tx ->
-                    viewModel.onEditTransactionClick(tx)
+                    // Navigate to full edit screen
+                    onEditTransaction(
+                        tx.id ?: 0,
+                        tx.amount.toString(),
+                        tx.merchant ?: "",
+                        tx.dateTime,
+                        tx.type
+                    )
+                    viewModel.onDismissTransactionList()
                 },
                 onDeleteTransaction = { tx ->
                     viewModel.onDeleteTransaction(tx)
@@ -514,7 +522,8 @@ private fun TransactionListBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = SurfaceWhite
+        containerColor = SurfaceWhite,
+        modifier = Modifier.navigationBarsPadding()
     ) {
         Column(
             modifier = Modifier

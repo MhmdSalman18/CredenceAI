@@ -39,6 +39,12 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getTransactionsByDateRange(start: Long, end: Long): Flow<List<Transaction>> {
+        return dao.getTransactionsByDateRange(start, end).map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
     override suspend fun deleteAllTransactions() {
         dao.deleteAllTransactions()
     }

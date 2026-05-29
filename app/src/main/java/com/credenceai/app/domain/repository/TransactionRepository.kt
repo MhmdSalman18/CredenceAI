@@ -16,5 +16,7 @@ interface TransactionRepository {
 
     fun getUncategorizedTransactions(): Flow<List<Transaction>>
 
+    fun getTransactionsByDateRange(start: Long, end: Long): Flow<List<Transaction>>
+
     suspend fun deleteAllTransactions()
 }

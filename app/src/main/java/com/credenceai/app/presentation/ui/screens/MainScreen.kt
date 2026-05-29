@@ -35,6 +35,8 @@ import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
 import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -240,8 +242,9 @@ fun MainScreen(
             composable(ScreenRoutes.Uncategorized.route) {
                 UncategorizedScreen(
                     onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        val encodedMerchant = URLEncoder.encode(merchant, StandardCharsets.UTF_8.toString())
                         navController.navigate(
-                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type"
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$encodedMerchant&timestamp=$timestamp&type=$type"
                         )
                     }
                 )
@@ -301,7 +304,8 @@ fun MainScreen(
                         navController.navigate(ScreenRoutes.EditBudget.createRoute(budgetId))
                     },
                     onLearnHowItWorks = {
-                        // Handle learn more
+                        // For now, navigate to analytics as a placeholder or show a message
+                        // Alternatively, we could have a dedicated help screen
                     }
                 )
             }
@@ -343,9 +347,13 @@ fun MainScreen(
                         navController.popBackStack()
                     },
                     onEditTransaction = { id, amount, merchant, timestamp, type ->
+                        val encodedMerchant = URLEncoder.encode(merchant, StandardCharsets.UTF_8.toString())
                         navController.navigate(
-                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$merchant&timestamp=$timestamp&type=$type"
+                            "${ScreenRoutes.AddExpense.route}?id=$id&amount=$amount&merchant=$encodedMerchant&timestamp=$timestamp&type=$type"
                         )
+                    },
+                    onViewAnalytics = {
+                        navController.navigate("analytics")
                     }
                 )
             }

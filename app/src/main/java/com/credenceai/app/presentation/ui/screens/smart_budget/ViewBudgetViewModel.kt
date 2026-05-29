@@ -85,22 +85,33 @@ class ViewBudgetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
+                // Start of the current month
+                val startOfMonth = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_MONTH, 1)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                // End of the current month
+                val endOfMonth = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }.timeInMillis
+
                 combine(
                     budgetRepository.getBudget(id),
-                    transactionRepository.getAllTransactions()
+                    transactionRepository.getTransactionsByDateRange(startOfMonth, endOfMonth)
                 ) { budgetWithCats, transactions ->
                     allTransactions = transactions
                     if (budgetWithCats != null) {
-                        val currentCalendar = Calendar.getInstance()
-                        val currentMonth = currentCalendar.get(Calendar.MONTH)
-                        val currentYear = currentCalendar.get(Calendar.YEAR)
-
-                        // Filter transactions for the current month and non-income types
+                        // Filter transactions for non-income types
                         val monthlyExpenses = transactions.filter {
-                            val cal = Calendar.getInstance().apply { timeInMillis = it.dateTime }
-                            cal.get(Calendar.MONTH) == currentMonth &&
-                                    cal.get(Calendar.YEAR) == currentYear &&
-                                    it.type.lowercase() !in listOf("credit", "income")
+                            it.type.lowercase() !in listOf("credit", "income")
                         }
 
                         val totalBudget = budgetWithCats.budget.totalBudget
@@ -179,15 +190,8 @@ class ViewBudgetViewModel @Inject constructor(
     }
 
     fun onCategoryClick(category: BudgetCategoryProgress) {
-        val currentCalendar = Calendar.getInstance()
-        val currentMonth = currentCalendar.get(Calendar.MONTH)
-        val currentYear = currentCalendar.get(Calendar.YEAR)
-
         val transactions = allTransactions.filter {
-            val cal = Calendar.getInstance().apply { timeInMillis = it.dateTime }
-            cal.get(Calendar.MONTH) == currentMonth &&
-                    cal.get(Calendar.YEAR) == currentYear &&
-                    it.category?.equals(category.name, ignoreCase = true) == true &&
+            it.category?.equals(category.name, ignoreCase = true) == true &&
                     it.type.lowercase() !in listOf("credit", "income")
         }
         

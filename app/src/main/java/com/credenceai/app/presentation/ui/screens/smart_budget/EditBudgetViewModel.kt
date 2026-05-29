@@ -87,7 +87,14 @@ class EditBudgetViewModel @Inject constructor(
     // ── Total Budget ─────────────────────────────────────────────────────────
 
     fun onTotalBudgetChanged(raw: String) {
-        val cleaned = raw.filter { it.isDigit() || it == '.' }
+        // Only allow digits and a single decimal point
+        val cleaned = if (raw.count { it == '.' } <= 1) {
+            raw.filter { it.isDigit() || it == '.' }
+        } else {
+            // If user tries to add another dot, keep the previous valid state or strip extra dots
+            val firstDotIndex = raw.indexOf('.')
+            raw.filterIndexed { index, c -> c.isDigit() || (c == '.' && index == firstDotIndex) }
+        }
         _uiState.update { state ->
             val updated = state.copy(totalBudget = cleaned)
             if (state.autoDistribute) updated.withAutoDistributed() else updated
@@ -121,8 +128,9 @@ class EditBudgetViewModel @Inject constructor(
     }
 
     fun onAddCategory(name: String, iconEmoji: String = "📂") {
+        val uniqueId = "${name.lowercase().replace(" ", "_")}_${System.currentTimeMillis()}"
         val newCategory = BudgetCategory(
-            id = name.lowercase().replace(" ", "_"),
+            id = uniqueId,
             name = name,
             iconEmoji = iconEmoji,
             allocatedAmount = 0.0,
