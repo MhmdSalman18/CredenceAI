@@ -72,18 +72,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.LinearProgressIndicator
+import com.credenceai.app.ui.theme.BackgroundPage
+import com.credenceai.app.ui.theme.BorderColor
+import com.credenceai.app.ui.theme.BrandBlue
+import com.credenceai.app.ui.theme.ErrorRed
+import com.credenceai.app.ui.theme.SummaryBg
+import com.credenceai.app.ui.theme.SurfaceWhite
+import com.credenceai.app.ui.theme.TextHint
+import com.credenceai.app.ui.theme.TextPrimary
+import com.credenceai.app.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
-
-// ─── Brand Colors (shared; extract to theme file in production) ───────────────
-private val BrandBlue     = Color(0xFF2A1DC4)
-private val BackgroundPage = Color(0xFFF5F5FA)
-private val SurfaceWhite  = Color(0xFFFFFFFF)
-private val TextPrimary   = Color(0xFF0D0D1A)
-private val TextSecondary = Color(0xFF6B6B80)
-private val TextHint      = Color(0xFFAAAAAA)
-private val BorderColor   = Color(0xFFE2E2EE)
-private val SummaryBg     = Color(0xFFF0F0F8)
-private val RemainingBlue = Color(0xFF2A1DC4)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -95,7 +100,6 @@ fun EditBudgetScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollState = rememberScrollState()
 
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var isDeleteMode by remember { mutableStateOf(false) }
@@ -137,161 +141,180 @@ fun EditBudgetScreen(
             EditBudgetTopBar(onNavigateBack = onNavigateBack)
 
             // ── Scrollable Body ───────────────────────────────────────────────
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 20.dp)
-                    .imePadding()
+                    .fillMaxWidth()
+                    .imePadding(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
-                Spacer(Modifier.height(4.dp))
-
-                // Sub-title
-                Text(
-                    text = "Plan your finances with precision for the upcoming month.",
-                    fontSize = 13.sp,
-                    color = TextSecondary,
-                    lineHeight = 20.sp,
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Budget Name Input ──────────────────────────────────────────
-                SectionLabel("Budget Name")
-                Spacer(Modifier.height(8.dp))
-                BudgetNameInput(
-                    value = uiState.budgetName,
-                    onValueChange = viewModel::onBudgetNameChanged
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Total Budget Input ────────────────────────────────────────
-                SectionLabel("Total Budget")
-                Spacer(Modifier.height(8.dp))
-                BudgetAmountInput(
-                    value = uiState.totalBudget,
-                    onValueChange = viewModel::onTotalBudgetChanged
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Auto Distribute Toggle ────────────────────────────────────
-                ToggleRow(
-                    title = "Auto distribute budget",
-                    subtitle = "Divide equally across categories",
-                    checked = uiState.autoDistribute,
-                    onCheckedChange = viewModel::onAutoDistributeToggled
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // ── Assigned / Remaining Summary ─────────────────────────────
-                AssignedRemainingSummary(
-                    assigned = uiState.assignedAmount,
-                    remaining = uiState.remainingAmount
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                // ── Categories ────────────────────────────────────────────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionLabel("Categories")
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RemoveCategoryButton(
-                            isDeleteMode = isDeleteMode,
-                            onClick = { isDeleteMode = !isDeleteMode }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        AddCategoryButton(onClick = {
-                            showAddCategoryDialog = true
-                        })
-                    }
+                item {
+                    // Sub-title
+                    Text(
+                        text = "Plan your finances with precision for the upcoming month.",
+                        fontSize = 13.sp,
+                        color = TextSecondary,
+                        lineHeight = 20.sp,
+                    )
+                    Spacer(Modifier.height(20.dp))
                 }
 
-                if (showAddCategoryDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showAddCategoryDialog = false },
-                        title = { Text("Add Category") },
-                        text = {
-                            Column {
-                                Text("Select an icon:", fontSize = 14.sp)
-                                Spacer(Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    emojiList.take(5).forEach { emoji ->
-                                        EmojiSelectionItem(
-                                            emoji = emoji,
-                                            isSelected = selectedEmoji == emoji,
-                                            onSelect = { selectedEmoji = emoji }
-                                        )
-                                    }
-                                }
-                                Spacer(Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    emojiList.drop(5).forEach { emoji ->
-                                        EmojiSelectionItem(
-                                            emoji = emoji,
-                                            isSelected = selectedEmoji == emoji,
-                                            onSelect = { selectedEmoji = emoji }
-                                        )
-                                    }
-                                }
+                item {
+                    // ── Budget Name Input ──────────────────────────────────────────
+                    SectionLabel("Budget Name")
+                    Spacer(Modifier.height(8.dp))
+                    BudgetNameInput(
+                        value = uiState.budgetName,
+                        onValueChange = viewModel::onBudgetNameChanged
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
 
-                                Spacer(Modifier.height(16.dp))
-                                Text("Enter category name:", fontSize = 14.sp)
-                                Spacer(Modifier.height(8.dp))
-                                OutlinedTextField(
-                                    value = newCategoryName,
-                                    onValueChange = { newCategoryName = it },
-                                    placeholder = { Text("e.g. Entertainment") },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    if (newCategoryName.isNotBlank()) {
-                                        viewModel.onAddCategory(newCategoryName, selectedEmoji)
-                                        newCategoryName = ""
-                                        selectedEmoji = "📂"
-                                        showAddCategoryDialog = false
-                                    }
-                                }
-                            ) {
-                                Text("Add")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showAddCategoryDialog = false }) {
-                                Text("Cancel")
-                            }
+                item {
+                    // ── Total Budget Input ────────────────────────────────────────
+                    SectionLabel("Total Budget")
+                    Spacer(Modifier.height(8.dp))
+                    BudgetAmountInput(
+                        value = uiState.totalBudget,
+                        onValueChange = viewModel::onTotalBudgetChanged
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                item {
+                    // ── Auto Distribute Toggle ────────────────────────────────────
+                    ToggleRow(
+                        title = "Auto distribute budget",
+                        subtitle = "Divide equally across categories",
+                        checked = uiState.autoDistribute,
+                        onCheckedChange = viewModel::onAutoDistributeToggled
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                item {
+                    // ── Assigned / Remaining Summary ─────────────────────────────
+                    AssignedRemainingSummary(
+                        assigned = uiState.assignedAmount,
+                        remaining = uiState.remainingAmount,
+                        total = uiState.totalBudgetAsDouble
+                    )
+                    Spacer(Modifier.height(24.dp))
+                }
+
+                item {
+                    // ── Categories Header ────────────────────────────────────────────────
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionLabel("Categories")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RemoveCategoryButton(
+                                isDeleteMode = isDeleteMode,
+                                onClick = { isDeleteMode = !isDeleteMode }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            AddCategoryButton(onClick = {
+                                showAddCategoryDialog = true
+                            })
                         }
+                    }
+
+                    if (showAddCategoryDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showAddCategoryDialog = false },
+                            title = { Text("Add Category") },
+                            text = {
+                                Column {
+                                    Text("Select an icon:", fontSize = 14.sp)
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        emojiList.take(5).forEach { emoji ->
+                                            EmojiSelectionItem(
+                                                emoji = emoji,
+                                                isSelected = selectedEmoji == emoji,
+                                                onSelect = { selectedEmoji = emoji }
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        emojiList.drop(5).forEach { emoji ->
+                                            EmojiSelectionItem(
+                                                emoji = emoji,
+                                                isSelected = selectedEmoji == emoji,
+                                                onSelect = { selectedEmoji = emoji }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(16.dp))
+                                    Text("Enter category name:", fontSize = 14.sp)
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedTextField(
+                                        value = newCategoryName,
+                                        onValueChange = { newCategoryName = it },
+                                        placeholder = { Text("e.g. Entertainment") },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        if (newCategoryName.isNotBlank()) {
+                                            viewModel.onAddCategory(newCategoryName, selectedEmoji)
+                                            newCategoryName = ""
+                                            selectedEmoji = "📂"
+                                            showAddCategoryDialog = false
+                                        }
+                                    }
+                                ) {
+                                    Text("Add")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showAddCategoryDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                // ── Category List Items ──────────────────────────────────────
+                items(
+                    items = uiState.categories,
+                    key = { it.id }
+                ) { category ->
+                    val index = uiState.categories.indexOf(category)
+                    val isLast = index == uiState.categories.lastIndex
+                    
+                    CategoryRowCard(
+                        category = category,
+                        readOnly = uiState.autoDistribute,
+                        isDeleteMode = isDeleteMode,
+                        isLast = isLast,
+                        onAmountChanged = { newAmount ->
+                            viewModel.onCategoryAmountChanged(category.id, newAmount)
+                        },
+                        onRemove = { viewModel.onRemoveCategory(category.id) }
                     )
                 }
 
-                Spacer(Modifier.height(12.dp))
-
-                CategoryList(
-                    categories = uiState.categories,
-                    autoDistribute = uiState.autoDistribute,
-                    isDeleteMode = isDeleteMode,
-                    onAmountChanged = viewModel::onCategoryAmountChanged,
-                    onRemoveCategory = viewModel::onRemoveCategory
-                )
-
-                Spacer(Modifier.height(32.dp))
+                item {
+                    Spacer(Modifier.height(32.dp))
+                }
             }
 
             // ── Save Button ───────────────────────────────────────────────────
@@ -466,22 +489,60 @@ private fun ToggleRow(
 // ─── Assigned / Remaining Summary ─────────────────────────────────────────────
 
 @Composable
-private fun AssignedRemainingSummary(assigned: Double, remaining: Double) {
-    Row(
+private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total: Double) {
+    val progress by animateFloatAsState(
+        targetValue = if (total > 0) (assigned / total).toFloat().coerceIn(0f, 1f) else 0f,
+        animationSpec = tween(800, easing = FastOutSlowInEasing)
+    )
+    val progressColor by animateColorAsState(
+        targetValue = when {
+            remaining < 0 -> ErrorRed
+            progress > 0.9f -> Color(0xFFFBC02D) // Warning yellow
+            else -> BrandBlue
+        }
+    )
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(SummaryBg)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(20.dp)
     ) {
-        SummaryItem(label = "Assigned", amount = assigned, amountColor = TextPrimary)
-        SummaryItem(
-            label = "Remaining",
-            amount = remaining,
-            amountColor = if (remaining < 0) Color(0xFFE53935) else RemainingBlue,
-            textAlign = TextAlign.End
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            SummaryItem(label = "Assigned", amount = assigned, amountColor = TextPrimary)
+            SummaryItem(
+                label = "Remaining",
+                amount = remaining,
+                amountColor = if (remaining < 0) ErrorRed else BrandBlue,
+                textAlign = TextAlign.End
+            )
+        }
+        
+        Spacer(Modifier.height(16.dp))
+        
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(CircleShape),
+            color = progressColor,
+            trackColor = BorderColor
         )
+        
+        if (remaining < 0) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Budget exceeded by ₹${"%,.0f".format(kotlin.math.abs(remaining))}",
+                color = ErrorRed,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -507,36 +568,32 @@ private fun SummaryItem(
 // ─── Category List ────────────────────────────────────────────────────────────
 
 @Composable
-private fun CategoryList(
-    categories: List<BudgetCategory>,
-    autoDistribute: Boolean,
+private fun CategoryRowCard(
+    category: BudgetCategory,
+    readOnly: Boolean,
     isDeleteMode: Boolean,
-    onAmountChanged: (String, String) -> Unit,
-    onRemoveCategory: (String) -> Unit,
+    isLast: Boolean,
+    onAmountChanged: (String) -> Unit,
+    onRemove: () -> Unit,
 ) {
     Surface(
         color = SurfaceWhite,
-        shape = RoundedCornerShape(16.dp),
-        tonalElevation = 0.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            categories.forEachIndexed { index, category ->
-                CategoryRow(
-                    category = category,
-                    readOnly = autoDistribute,
-                    isDeleteMode = isDeleteMode,
-                    onAmountChanged = { newAmount ->
-                        onAmountChanged(category.id, newAmount)
-                    },
-                    onRemove = { onRemoveCategory(category.id) }
+            CategoryRow(
+                category = category,
+                readOnly = readOnly,
+                isDeleteMode = isDeleteMode,
+                onAmountChanged = onAmountChanged,
+                onRemove = onRemove
+            )
+            if (!isLast) {
+                HorizontalDivider(
+                    color = BorderColor,
+                    thickness = 0.5.dp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                if (index < categories.lastIndex) {
-                    HorizontalDivider(
-                        color = BorderColor,
-                        thickness = 0.5.dp,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
             }
         }
     }
