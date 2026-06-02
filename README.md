@@ -74,9 +74,9 @@ com.credenceai.app
 ## 🤝 Let's Connect
 I am an Android Engineer passionate about building clean, high-performance applications that solve real-world problems.
 
-**Author:** [Your Name]  
-**LinkedIn:** [Your LinkedIn Profile]  
-**Portfolio:** [Your Website Link]
+**Author:** Muhammed Salman  
+**LinkedIn:** [Muhammed Salman](https://www.linkedin.com/in/mhmds/)  
+**Portfolio:** [mhmds.github.io](https://mhmds.github.io/)
 
 ---
 *This repository serves as a portfolio piece demonstrating expertise in Modern Android Development (MAD) and scalable system design.*
