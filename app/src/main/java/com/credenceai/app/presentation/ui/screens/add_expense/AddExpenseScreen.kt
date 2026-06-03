@@ -27,15 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.credenceai.app.ui.theme.*
 
-// ─── Brand Colors ───────────────────────────────────────────────────────────
-private val PrimaryBlue   = Color(0xFF1A3A8F)
-private val LightBlue     = Color(0xFFE8EEF9)
-private val BackgroundGray= Color(0xFFF5F6FA)
-private val DividerGray   = Color(0xFFE0E3EB)
-private val TextPrimary   = Color(0xFF1A1D2E)
-private val TextSecondary = Color(0xFF8A90A2)
-private val ErrorRed      = Color(0xFFD94040)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -405,7 +398,7 @@ private fun BasicAmountField(value: String, onValueChange: (String) -> Unit) {
         textStyle = androidx.compose.ui.text.TextStyle(
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
-            color = if (value.isEmpty()) Color(0xFFCDD0DA) else TextPrimary,
+            color = if (value.isEmpty()) TextHint else TextPrimary,
             textAlign = TextAlign.Start
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -416,7 +409,7 @@ private fun BasicAmountField(value: String, onValueChange: (String) -> Unit) {
                     "0",
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFCDD0DA)
+                    color = TextHint
                 )
             }
             inner()

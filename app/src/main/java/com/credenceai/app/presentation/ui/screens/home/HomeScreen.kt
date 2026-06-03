@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.credenceai.app.core.utils.ExportUtils
 import com.credenceai.app.domain.model.Transaction
+import com.credenceai.app.ui.theme.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
@@ -41,16 +42,11 @@ import java.util.Locale
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
-private val CardBlueStart = Color(0xFF2D5BE3)
-private val CardBlueEnd   = Color(0xFF1A3BAA)
-private val CardBlueMid   = Color(0xFF3A6FEF)
-private val AccentGreen   = Color(0xFF4CD964)
-private val BackgroundGray= Color(0xFFF2F4F8)
 private val TextWhite     = Color.White
 private val TextWhite70   = Color.White.copy(alpha = 0.70f)
 private val TextDark      = Color(0xFF1A1A2E)
 private val TextGray      = Color(0xFF8A94A6)
-private val ActionBorder  = Color(0xFFDDE3F0)
+
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
 
@@ -275,10 +271,10 @@ private fun RecentTransactionsSection(
 @Composable
 private fun TransactionItem(transaction: Transaction, onClick: () -> Unit = {}) {
     val isExpense = transaction.type.lowercase() == "debit" || transaction.type.lowercase() == "expense"
-    val amountColor = if (isExpense) Color(0xFFE05252) else Color(0xFF4CD964)
+    val amountColor = if (isExpense) DebitRed else AccentGreen
     val amountPrefix = if (isExpense) "-" else "+"
     val icon = if (isExpense) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp
-    val iconBackground = if (isExpense) Color(0xFFE05252).copy(alpha = 0.1f) else Color(0xFF4CD964).copy(alpha = 0.1f)
+    val iconBackground = if (isExpense) DebitRed.copy(alpha = 0.1f) else AccentGreen.copy(alpha = 0.1f)
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -453,10 +449,10 @@ private fun QuickActionsRow(
             label = "ADD\nTRANSACTION", iconTint = CardBlueStart,
             borderColor = CardBlueStart.copy(alpha = 0.4f), onClick = onAddExpense, isPrimary = true)
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.AttachMoney,
-            label = "SMART\nBUDGET", iconTint = Color(0xFF4CD964),
+            label = "SMART\nBUDGET", iconTint = AccentGreen,
             borderColor = ActionBorder, onClick = onSmartBudget)
         ActionButton(modifier = Modifier.weight(1f), icon = Icons.Default.Download,
-            label = "EXPORT\nREPORT", iconTint = Color(0xFF2D5BE3),
+            label = "EXPORT\nREPORT", iconTint = CardBlueStart,
             borderColor = ActionBorder, onClick = onExportReport)
     }
 }

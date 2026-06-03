@@ -24,16 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.credenceai.app.R
+import com.credenceai.app.ui.theme.*
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
-private val PrimaryBlue    = Color(0xFF1A3A8F)
-private val BackgroundGray = Color(0xFFF5F6FA)
-private val TextPrimary    = Color(0xFF1A1D2E)
-private val TextSecondary  = Color(0xFF8A90A2)
-private val DividerGray    = Color(0xFFECEEF3)
-private val UncatRed       = Color(0xFFE05252)
-private val CreditGreen    = Color(0xFF27AE60)
+private val UncatRed       = DebitRed
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 

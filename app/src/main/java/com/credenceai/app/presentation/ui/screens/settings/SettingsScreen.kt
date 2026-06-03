@@ -29,11 +29,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import android.content.Intent
 import android.net.Uri
 import com.credenceai.app.core.utils.ExportUtils
+import com.credenceai.app.ui.theme.*
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
-
-private val TextRed        = Color(0xFFE05252)
-private val GreenOn        = Color(0xFF34C759)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -95,12 +92,12 @@ fun SettingsScreen(
     if (uiState.showClearDataDialog) {
         AlertDialog(
             onDismissRequest = viewModel::onClearDataDismissed,
-            icon    = { Icon(Icons.Default.Warning, contentDescription = null, tint = TextRed) },
+            icon    = { Icon(Icons.Default.Warning, contentDescription = null, tint = ErrorRed) },
             title   = { Text("Clear All Data?", fontWeight = FontWeight.Bold) },
             text    = { Text("This will permanently delete all your transactions, categories, and settings. This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = viewModel::onClearDataConfirmed) {
-                    Text("Clear Data", color = TextRed, fontWeight = FontWeight.SemiBold)
+                    Text("Clear Data", color = ErrorRed, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
@@ -296,12 +293,12 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    SettingsIcon(icon = Icons.Default.DeleteForever, tint = TextRed)
+                    SettingsIcon(icon = Icons.Default.DeleteForever, tint = ErrorRed)
                     Text("Clear Data", fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium, color = TextRed)
+                        fontWeight = FontWeight.Medium, color = ErrorRed)
                 }
                 Icon(Icons.Default.Warning, contentDescription = null,
-                    tint = TextRed, modifier = Modifier.size(20.dp))
+                    tint = ErrorRed, modifier = Modifier.size(20.dp))
             }
         }
 

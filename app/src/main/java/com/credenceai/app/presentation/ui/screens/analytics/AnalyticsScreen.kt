@@ -29,19 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.credenceai.app.R
+import com.credenceai.app.ui.theme.*
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 
-private val PrimaryBlue    = Color(0xFF1A3A8F)
-private val BrightBlue     = Color(0xFF2D5BE3)
-private val LightBlue      = Color(0xFFE8EEF9)
-private val BackgroundGray = Color(0xFFF5F6FA)
-private val TextPrimary    = Color(0xFF1A1D2E)
-private val TextSecondary  = Color(0xFF8A90A2)
-private val DividerGray    = Color(0xFFECEEF3)
-private val CreditGreen    = Color(0xFF27AE60)
-private val DebitRed       = Color(0xFFE05252)
-private val InsightGold    = Color(0xFFFFD700)
+private val BrightBlue     = CardBlueStart
+
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -192,7 +185,7 @@ fun AnalyticsScreen(
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(
-                        Brush.linearGradient(listOf(Color(0xFF2D5BE3), Color(0xFF1A3A8F)))
+                        Brush.linearGradient(listOf(CardBlueStart, PrimaryBlue))
                     )
                     .padding(20.dp)
             ) {
@@ -355,9 +348,9 @@ private fun SummaryRow(
 
 @Composable
 private fun SpendingTrendChart(points: List<SpendingPoint>, modifier: Modifier = Modifier) {
-    val lineColor = Color(0xFF2D5BE3)
-    val fillStart = Color(0xFF2D5BE3).copy(alpha = 0.20f)
-    val fillEnd   = Color(0xFF2D5BE3).copy(alpha = 0.00f)
+    val lineColor = CardBlueStart
+    val fillStart = CardBlueStart.copy(alpha = 0.20f)
+    val fillEnd   = CardBlueStart.copy(alpha = 0.00f)
 
     Canvas(modifier = modifier) {
         if (points.size < 2) return@Canvas

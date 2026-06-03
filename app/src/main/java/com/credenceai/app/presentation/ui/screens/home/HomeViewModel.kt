@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.credenceai.app.ui.theme.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.core.preferences.PreferencesManager
@@ -124,11 +125,11 @@ class HomeViewModel @Inject constructor(
 
     private fun getColorForCategory(category: String): Color {
         return when (category.uppercase()) {
-            "FOOD", "FOOD & DINING" -> Color(0xFFE07B39)
-            "SHOPPING" -> Color(0xFF7B5EA7)
-            "TRAVEL" -> Color(0xFF2D9CDB)
-            "BILLS", "BILLS & UTILITIES" -> Color(0xFFE05252)
-            else -> Color(0xFF8A94A6)
+            "FOOD", "FOOD & DINING" -> CategoryFood
+            "SHOPPING" -> CategoryShopping
+            "TRAVEL" -> CategoryTravel
+            "BILLS", "BILLS & UTILITIES" -> DebitRed
+            else -> CategoryDefault
         }
     }
 
