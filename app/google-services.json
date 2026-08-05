@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "876979315971",
+    "project_id": "credenceai-7e5c3",
+    "storage_bucket": "credenceai-7e5c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876979315971:android:05822568975350cab4f536",
+        "android_client_info": {
+          "package_name": "com.credenceai.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "876979315971-3li6dulqh3u69jqbi9ru7f060jkci516.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_pT-YdqO7Q5L4otI_OopiosXJYf5hYN4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "876979315971-3li6dulqh3u69jqbi9ru7f060jkci516.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

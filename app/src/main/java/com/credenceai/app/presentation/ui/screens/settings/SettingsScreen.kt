@@ -38,7 +38,8 @@ import com.credenceai.app.ui.theme.*
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToSupportedBanks: () -> Unit = {},
-    onNavigateToUncategorized: () -> Unit = {}
+    onNavigateToUncategorized: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -271,7 +272,7 @@ fun SettingsScreen(
             NavigationRow(
                 icon    = Icons.Default.CloudSync,
                 label   = "Backup & Restore",
-                onClick = viewModel::onBackupRestoreClick
+                onClick = onNavigateToBackup
             )
             SettingsDivider()
             NavigationRow(

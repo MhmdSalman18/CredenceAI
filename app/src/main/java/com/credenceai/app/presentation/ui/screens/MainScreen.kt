@@ -29,6 +29,7 @@ import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.notifications.NotificationsScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
+import com.credenceai.app.presentation.ui.screens.backup.BackupScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.EditBudgetScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
@@ -291,6 +292,9 @@ fun MainScreen(
                     },
                     onNavigateToUncategorized = {
                         navController.navigate(ScreenRoutes.Uncategorized.route)
+                    },
+                    onNavigateToBackup = {
+                        navController.navigate(ScreenRoutes.Backup.route)
                     }
                 )
             }
@@ -375,6 +379,13 @@ fun MainScreen(
                     },
                     onViewAnalytics = {
                         navController.navigate("analytics")
+                    }
+                )
+            }
+            composable(ScreenRoutes.Backup.route) {
+                BackupScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }

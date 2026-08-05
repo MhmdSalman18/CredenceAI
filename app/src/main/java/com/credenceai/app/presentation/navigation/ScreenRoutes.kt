@@ -17,4 +17,5 @@ sealed class ScreenRoutes(val route: String) {
     }
     object SupportedBanks : ScreenRoutes("supported_banks")
     object Notifications  : ScreenRoutes("notifications")
+    object Backup         : ScreenRoutes("backup")
 }

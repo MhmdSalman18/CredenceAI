@@ -134,6 +134,18 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    private val LAST_BACKUP_TIME_KEY = stringPreferencesKey("last_backup_time")
+
+    val lastBackupTime: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[LAST_BACKUP_TIME_KEY] ?: "Never"
+    }
+
+    suspend fun setLastBackupTime(time: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_BACKUP_TIME_KEY] = time
+        }
+    }
+
     suspend fun setBalanceHidden(hidden: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HIDE_BALANCE_KEY] = hidden

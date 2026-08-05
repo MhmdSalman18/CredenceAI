@@ -12,6 +12,7 @@ import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroS
 import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
 import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
+import com.credenceai.app.presentation.ui.screens.backup.BackupScreen
 
 @Composable
 fun NavGraph() {
@@ -109,6 +110,14 @@ fun NavGraph() {
 
         composable(ScreenRoutes.Uncategorized.route) {
             UncategorizedScreen()
+        }
+
+        composable(ScreenRoutes.Backup.route) {
+            BackupScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
