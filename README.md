@@ -5,7 +5,7 @@
 ---
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="128" height="128" alt="CredenceAI Icon" />
+  <img src="app/src/main/res/drawable/credenceai_icon.png" width="128" height="128" alt="CredenceAI Icon" />
 </p>
 
 <p align="center">
