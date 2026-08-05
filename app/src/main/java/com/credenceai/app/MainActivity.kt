@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.credenceai.app.presentation.navigation.NavGraph
 import com.credenceai.app.presentation.ui.ThemeViewModel
 import com.credenceai.app.presentation.ui.screens.MainScreen
 import com.credenceai.app.ui.theme.CredenceAITheme

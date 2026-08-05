@@ -185,7 +185,9 @@ cd CredenceAI
 ```
 
 ### 3. Build & Compile Setup
-Open the root directory in Android Studio. Ensure that Gradle utilizes **JDK 17** for compiling the dependency graph. Build a debug package directly from the Android Studio dashboard or via the shell terminal:
+1. **Firebase Configuration:** Since this project uses Firebase for backups and authentication, you need to add your own `google-services.json` file to the `app/` directory. You can obtain this from the [Firebase Console](https://console.firebase.google.com/).
+2. Open the root directory in Android Studio. Ensure that Gradle utilizes **JDK 17** for compiling the dependency graph.
+3. Build a debug package directly from the Android Studio dashboard or via the shell terminal:
 ```bash
 ./gradlew assembleDebug
 ```
@@ -199,22 +201,29 @@ Because Android sandbox protocols enforce strict permissions on notifications, b
 
 ---
 
-## 📈 Future Roadmap
+[//]: # (## 📈 Future Roadmap)
 
-- [ ] **On-Device NLP ML Engine:** Moving away from standard Regex parsing towards a localized Natural Language Processing (NLP) model to classify custom merchant formats.
-- [ ] **Dynamic Analytics Dashboard:** Interactive pie-charts and expense-over-time lines drawn directly on a Jetpack Compose Canvas.
-- [ ] **Multi-currency Converter:** Integrated conversion APIs for multi-country billing transactions.
-- [ ] **Automated Google Drive Backup:** Encrypted transaction backup configurations to secure user data directories.
+[//]: # ()
+[//]: # (- [ ] **On-Device NLP ML Engine:** Moving away from standard Regex parsing towards a localized Natural Language Processing &#40;NLP&#41; model to classify custom merchant formats.)
 
----
+[//]: # (- [ ] **Dynamic Analytics Dashboard:** Interactive pie-charts and expense-over-time lines drawn directly on a Jetpack Compose Canvas.)
 
-## 🤝 Let's Connect
+[//]: # (- [ ] **Multi-currency Converter:** Integrated conversion APIs for multi-country billing transactions.)
 
-I am Muhammed Salman, an Android Engineer focused on crafting clean, top-tier, and high-performance apps that solve real problems. Let's build something exceptional together!
+[//]: # (- [ ] **Automated Google Drive Backup:** Encrypted transaction backup configurations to secure user data directories.)
 
-*   **LinkedIn:** [Muhammed Salman](https://www.linkedin.com/in/mhmds/)
-*   **Portfolio:** [mhmds.github.io](https://mhmds.github.io/)
-*   **GitHub Repository:** [CredenceAI](https://github.com/MhmdSalman18/CredenceAI)
+[//]: # ()
+[//]: # (---)
 
----
-*This repository is maintained as a standard-setting portfolio showcase demonstrating expertise in Modern Android Development (MAD) and Clean Architecture principles.*
+[//]: # (## 🤝 Let's Connect)
+
+[//]: # ()
+[//]: # ()
+[//]: # (*   **LinkedIn:** [Muhammed Salman]&#40;https://www.linkedin.com/in/mhmds/&#41;)
+
+[//]: # (*   **Portfolio:** [mhmds.github.io]&#40;https://mhmds.github.io/&#41;)
+
+[//]: # (*   **GitHub Repository:** [CredenceAI]&#40;https://github.com/MhmdSalman18/CredenceAI&#41;)
+
+[//]: # ()
+[//]: # (---)
