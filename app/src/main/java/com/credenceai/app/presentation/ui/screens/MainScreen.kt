@@ -23,7 +23,6 @@ import androidx.navigation.navArgument
 import com.credenceai.app.R
 import com.credenceai.app.presentation.navigation.*
 import com.credenceai.app.presentation.ui.screens.add_expense.AddExpenseScreen
-import com.credenceai.app.presentation.ui.screens.addedit.AddEditTransactionScreen
 import com.credenceai.app.presentation.ui.screens.analytics.AnalyticsScreen
 import com.credenceai.app.presentation.ui.screens.history.HistoryScreen
 import com.credenceai.app.presentation.ui.screens.home.HomeScreen
@@ -34,7 +33,6 @@ import com.credenceai.app.presentation.ui.screens.smart_budget.EditBudgetScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
 import com.credenceai.app.presentation.ui.screens.supported_banks.SupportedBanksScreen
-import com.credenceai.app.presentation.ui.screens.transactions.TransactionsScreen
 import com.credenceai.app.presentation.ui.screens.uncategorized.UncategorizedScreen
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -246,8 +244,13 @@ fun MainScreen(
                 )
             }
 
-            composable(ScreenRoutes.Transactions.route) { TransactionsScreen() }
-            composable(ScreenRoutes.AddTransaction.route) { AddEditTransactionScreen() }
+            composable(ScreenRoutes.AddIncome.route) {
+                AddExpenseScreen(
+                    isIncome = true,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaveSuccess = { navController.popBackStack() }
+                )
+            }
 
             composable(ScreenRoutes.Uncategorized.route) {
                 UncategorizedScreen(
