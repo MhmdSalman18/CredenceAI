@@ -28,7 +28,7 @@ object BackupEncryptionUtils {
             random.nextBytes(salt)
             val iv = ByteArray(IV_LENGTH_BYTES)
             random.nextBytes(iv)
-
+//not using
             // 2. Derive AES-256 key from passphrase
             val keySpec = PBEKeySpec(passphrase, salt, ITERATION_COUNT, KEY_LENGTH_BITS)
             val keyFactory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
