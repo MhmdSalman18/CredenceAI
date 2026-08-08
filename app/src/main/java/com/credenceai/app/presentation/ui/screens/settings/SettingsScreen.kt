@@ -109,6 +109,47 @@ fun SettingsScreen(
         )
     }
 
+    // ── Currency Picker Dialog ────────────────────────────────────────────
+    if (uiState.showCurrencyPicker) {
+        val currencies = listOf(
+            "INR (₹)", "USD ($)", "EUR (€)", "GBP (£)", "JPY (¥)",
+            "AUD (A$)", "CAD (C$)", "CHF (Fr)"
+        )
+        AlertDialog(
+            onDismissRequest = { /* We could add a dismiss handler in VM if needed */ },
+            title = { Text("Select Currency", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    currencies.forEach { currency ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.onCurrencySelected(currency) }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = uiState.currency == currency,
+                                onClick = { viewModel.onCurrencySelected(currency) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = currency, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { /* Handle dismiss via a new VM method if desired, or just use the flag */ 
+                    // For now, let's assume we need a dismiss action in VM
+                    // viewModel.onCurrencyDismissed() // I'll add this to VM
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

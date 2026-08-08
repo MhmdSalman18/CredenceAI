@@ -2,6 +2,7 @@ package com.credenceai.app.presentation.ui.screens.uncategorized
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
 import com.credenceai.app.domain.usecase.DeleteTransactionUseCase
 import com.credenceai.app.domain.usecase.GetUncategorizedTransactionsUseCase
 import com.credenceai.app.domain.usecase.UpdateTransactionUseCase
@@ -37,17 +38,22 @@ enum class TransactionCategory {
 
 data class UncategorizedUiState(
     val transactions: List<Transaction> = emptyList(),
-    val isAutoSyncActive: Boolean = true
+    val isAutoSyncActive: Boolean = true,
+    val currency: String = "INR (₹)"
 )
 
 @HiltViewModel
 class UncategorizedViewModel @Inject constructor(
     private val getUncategorizedTransactionsUseCase: GetUncategorizedTransactionsUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
-    private val deleteTransactionUseCase: DeleteTransactionUseCase
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    val uiState: StateFlow<UncategorizedUiState> = getUncategorizedTransactionsUseCase().map { transactions ->
+    val uiState: StateFlow<UncategorizedUiState> = combine(
+        getUncategorizedTransactionsUseCase(),
+        preferencesManager.currency
+    ) { transactions, currency ->
         UncategorizedUiState(
             transactions = transactions.map { domainTx ->
                 val id = domainTx.id.toString()
@@ -65,7 +71,8 @@ class UncategorizedViewModel @Inject constructor(
                     iconType = getIconType(domainTx.category),
                     category = null
                 )
-            }
+            },
+            currency = currency
         )
     }.stateIn(
         scope = viewModelScope,

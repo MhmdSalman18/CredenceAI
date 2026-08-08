@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -119,9 +120,9 @@ class TransactionNotificationListener : NotificationListenerService() {
         "breaking news", "update available", "new message", "missed call"
     )
 
-    // Matches: ₹1,000  |  Rs.500  |  INR 2500  |  Rs 999.00
+    // Matches: ₹1,000  |  Rs.500  |  INR 2500  |  Rs 999.00  |  $10.00  |  €50  |  £10
     private val AMOUNT_REGEX = Regex(
-        """(?:₹|Rs\.?\s*|INR\s*)([\d,]+(?:\.\d{1,2})?)""",
+        """(?:₹|Rs\.?|INR|\$|€|£|¥)\s*([\d,]+(?:\.\d{1,2})?)""",
         RegexOption.IGNORE_CASE
     )
 
@@ -135,7 +136,7 @@ class TransactionNotificationListener : NotificationListenerService() {
     // "Muhammed Zaayid paid you ₹1.00" -> Group 2: Muhammed Zaayid
     // "You paid Muhammed Zaayid ₹1.00" -> Group 1: Muhammed Zaayid
     private val UPI_TITLE_MERCHANT_REGEX = Regex(
-        """(?:You paid|Paid to|Sent to)\s+(.*?)\s+(?:₹|Rs)|^(.*?)\s+(?:paid you|sent you|transferred)\s+(?:₹|Rs)""",
+        """(?:You paid|Paid to|Sent to)\s+(.*?)\s+(?:₹|Rs|\$|€|£|¥)|^(.*?)\s+(?:paid you|sent you|transferred)\s+(?:₹|Rs|\$|€|£|¥)""",
         RegexOption.IGNORE_CASE
     )
 
@@ -263,7 +264,9 @@ class TransactionNotificationListener : NotificationListenerService() {
         serviceScope.launch {
             try {
                 addTransactionUseCase(transaction)
-                Timber.d("✅ Saved: %s ₹%f via %s from '%s'", type, amount, paymentMode, merchant)
+                val currency = preferencesManager.currency.first()
+                val formattedAmount = com.credenceai.app.core.utils.CurrencyUtils.formatAmount(amount, currency)
+                Timber.d("✅ Saved: %s %s via %s from '%s'", type, formattedAmount, paymentMode, merchant)
             } catch (e: Exception) {
                 Timber.e(e, "❌ DB error")
             }

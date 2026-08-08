@@ -88,6 +88,7 @@ import com.credenceai.app.ui.theme.SurfaceWhite
 import com.credenceai.app.ui.theme.TextHint
 import com.credenceai.app.ui.theme.TextPrimary
 import com.credenceai.app.ui.theme.TextSecondary
+import com.credenceai.app.core.utils.CurrencyUtils
 import kotlinx.coroutines.launch
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -176,6 +177,7 @@ fun EditBudgetScreen(
                     Spacer(Modifier.height(8.dp))
                     BudgetAmountInput(
                         value = uiState.totalBudget,
+                        currency = uiState.currency,
                         onValueChange = viewModel::onTotalBudgetChanged
                     )
                     Spacer(Modifier.height(20.dp))
@@ -197,7 +199,8 @@ fun EditBudgetScreen(
                     AssignedRemainingSummary(
                         assigned = uiState.assignedAmount,
                         remaining = uiState.remainingAmount,
-                        total = uiState.totalBudgetAsDouble
+                        total = uiState.totalBudgetAsDouble,
+                        currency = uiState.currency
                     )
                     Spacer(Modifier.height(24.dp))
                 }
@@ -305,6 +308,7 @@ fun EditBudgetScreen(
                         readOnly = uiState.autoDistribute,
                         isDeleteMode = isDeleteMode,
                         isLast = isLast,
+                        currency = uiState.currency,
                         onAmountChanged = { newAmount ->
                             viewModel.onCategoryAmountChanged(category.id, newAmount)
                         },
@@ -403,6 +407,7 @@ private fun BudgetNameInput(
 @Composable
 private fun BudgetAmountInput(
     value: String,
+    currency: String,
     onValueChange: (String) -> Unit,
 ) {
     Box(
@@ -415,7 +420,7 @@ private fun BudgetAmountInput(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "₹",
+                text = CurrencyUtils.extractSymbol(currency),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextPrimary
@@ -489,7 +494,7 @@ private fun ToggleRow(
 // ─── Assigned / Remaining Summary ─────────────────────────────────────────────
 
 @Composable
-private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total: Double) {
+private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total: Double, currency: String) {
     val progress by animateFloatAsState(
         targetValue = if (total > 0) (assigned / total).toFloat().coerceIn(0f, 1f) else 0f,
         animationSpec = tween(800, easing = FastOutSlowInEasing)
@@ -513,10 +518,11 @@ private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total:
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            SummaryItem(label = "Assigned", amount = assigned, amountColor = TextPrimary)
+            SummaryItem(label = "Assigned", amount = assigned, currency = currency, amountColor = TextPrimary)
             SummaryItem(
                 label = "Remaining",
                 amount = remaining,
+                currency = currency,
                 amountColor = if (remaining < 0) ErrorRed else BrandBlue,
                 textAlign = TextAlign.End
             )
@@ -537,7 +543,7 @@ private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total:
         if (remaining < 0) {
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Budget exceeded by ₹${"%,.0f".format(kotlin.math.abs(remaining))}",
+                text = "Budget exceeded by ${CurrencyUtils.formatAmount(kotlin.math.abs(remaining), currency)}",
                 color = ErrorRed,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
@@ -550,6 +556,7 @@ private fun AssignedRemainingSummary(assigned: Double, remaining: Double, total:
 private fun SummaryItem(
     label: String,
     amount: Double,
+    currency: String,
     amountColor: Color,
     textAlign: TextAlign = TextAlign.Start,
 ) {
@@ -557,7 +564,7 @@ private fun SummaryItem(
         Text(text = label, fontSize = 12.sp, color = TextSecondary)
         Spacer(Modifier.height(2.dp))
         Text(
-            text = "₹${"%,.0f".format(amount)}",
+            text = CurrencyUtils.formatAmount(amount, currency),
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             color = amountColor
@@ -573,6 +580,7 @@ private fun CategoryRowCard(
     readOnly: Boolean,
     isDeleteMode: Boolean,
     isLast: Boolean,
+    currency: String,
     onAmountChanged: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
@@ -585,6 +593,7 @@ private fun CategoryRowCard(
                 category = category,
                 readOnly = readOnly,
                 isDeleteMode = isDeleteMode,
+                currency = currency,
                 onAmountChanged = onAmountChanged,
                 onRemove = onRemove
             )
@@ -604,6 +613,7 @@ private fun CategoryRow(
     category: BudgetCategory,
     readOnly: Boolean,
     isDeleteMode: Boolean,
+    currency: String,
     onAmountChanged: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
@@ -651,9 +661,9 @@ private fun CategoryRow(
             modifier = Modifier.weight(1f)
         )
 
-        // ₹ prefix
+        // Currency prefix
         Text(
-            text = "₹",
+            text = CurrencyUtils.extractSymbol(currency),
             fontSize = 14.sp,
             color = TextSecondary
         )

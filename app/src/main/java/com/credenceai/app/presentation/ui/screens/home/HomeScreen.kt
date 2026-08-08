@@ -106,6 +106,7 @@ fun HomeScreen(
             )
             RecentTransactionsSection(
                 transactions = uiState.recentTransactions,
+                currency = uiState.currency,
                 onViewAll = onViewAllTransactions,
                 onTransactionClick = { tx ->
                     onEditTransaction(
@@ -220,6 +221,7 @@ private fun UncategorizedBanner(
 @Composable
 private fun RecentTransactionsSection(
     transactions: List<Transaction>,
+    currency: String,
     onViewAll: () -> Unit,
     onTransactionClick: (Transaction) -> Unit = {}
 ) {
@@ -261,7 +263,11 @@ private fun RecentTransactionsSection(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 transactions.forEach { transaction ->
-                    TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction) })
+                    TransactionItem(
+                        transaction = transaction,
+                        currency = currency,
+                        onClick = { onTransactionClick(transaction) }
+                    )
                 }
             }
         }
@@ -269,7 +275,11 @@ private fun RecentTransactionsSection(
 }
 
 @Composable
-private fun TransactionItem(transaction: Transaction, onClick: () -> Unit = {}) {
+private fun TransactionItem(
+    transaction: Transaction,
+    currency: String,
+    onClick: () -> Unit = {}
+) {
     val isExpense = transaction.type.lowercase() == "debit" || transaction.type.lowercase() == "expense"
     val amountColor = if (isExpense) DebitRed else AccentGreen
     val amountPrefix = if (isExpense) "-" else "+"
@@ -320,7 +330,7 @@ private fun TransactionItem(transaction: Transaction, onClick: () -> Unit = {}) 
             }
 
             Text(
-                text = "$amountPrefix ₹${String.format(Locale.getDefault(), "%.2f", transaction.amount)}",
+                text = "$amountPrefix ${CurrencyUtils.formatAmount(transaction.amount, currency)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = amountColor

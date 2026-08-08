@@ -135,6 +135,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onCurrencyDismissed() {
+        _uiState.update { it.copy(showCurrencyPicker = false) }
+    }
+
     fun onLanguageClick() {
         _uiState.update { it.copy(showLanguagePicker = true) }
     }

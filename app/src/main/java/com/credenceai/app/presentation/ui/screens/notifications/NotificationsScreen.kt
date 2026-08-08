@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.credenceai.app.core.utils.CurrencyUtils
 import com.credenceai.app.domain.model.Transaction
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,7 +32,7 @@ fun NotificationsScreen(
     onEditTransaction: (Int, String, String, Long, String) -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
-    val notifications by viewModel.notifications.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -45,7 +46,7 @@ fun NotificationsScreen(
             )
         }
     ) { padding ->
-        if (notifications.isEmpty()) {
+        if (uiState.notifications.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -73,9 +74,10 @@ fun NotificationsScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                items(notifications) { transaction ->
+                items(uiState.notifications) { transaction ->
                     NotificationItem(
                         transaction = transaction,
+                        currency = uiState.currency,
                         onClick = {
                             onEditTransaction(
                                 transaction.id,
@@ -100,6 +102,7 @@ fun NotificationsScreen(
 @Composable
 fun NotificationItem(
     transaction: Transaction,
+    currency: String,
     onClick: () -> Unit
 ) {
     Row(
@@ -135,7 +138,7 @@ fun NotificationItem(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "You ${if (transaction.type == "CREDIT") "received" else "spent"} ₹${String.format(Locale.getDefault(), "%.2f", transaction.amount)} ${if (transaction.merchant != null) "at ${transaction.merchant}" else ""}",
+                text = "You ${if (transaction.type == "CREDIT") "received" else "spent"} ${CurrencyUtils.formatAmount(transaction.amount, currency)} ${if (transaction.merchant != null) "at ${transaction.merchant}" else ""}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

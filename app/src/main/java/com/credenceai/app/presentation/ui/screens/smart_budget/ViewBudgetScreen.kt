@@ -71,7 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-
+import com.credenceai.app.core.utils.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -145,6 +145,7 @@ fun ViewBudgetScreen(
                         remainingBudget = uiState.remainingBudget,
                         usagePercent = uiState.usagePercent,
                         usagePercentDisplay = uiState.usagePercentDisplay,
+                        currency = uiState.currency,
                         onEditClick = onEditBudget,
                         onBackClick = onNavigateBack,
                     )
@@ -214,6 +215,7 @@ fun ViewBudgetScreen(
         if (uiState.isAddingSpend && uiState.selectedCategoryForSpend != null) {
             AddSpendDialog(
                 categoryName = uiState.selectedCategoryForSpend!!.name,
+                currency = uiState.currency,
                 onDismiss = { viewModel.onDismissAddSpend() },
                 onSave = { amount, note -> viewModel.onSaveSpend(amount, note) }
             )
@@ -223,6 +225,7 @@ fun ViewBudgetScreen(
             TransactionListBottomSheet(
                 categoryName = uiState.selectedCategoryForSpend!!.name,
                 transactions = uiState.selectedCategoryTransactions,
+                currency = uiState.currency,
                 onDismiss = { viewModel.onDismissTransactionList() },
                 onEditTransaction = { tx ->
                     // Navigate to full edit screen
@@ -244,6 +247,7 @@ fun ViewBudgetScreen(
         if (uiState.isEditingTransaction && uiState.selectedTransactionToEdit != null) {
             EditAmountDialog(
                 initialAmount = uiState.selectedTransactionToEdit!!.amount,
+                currency = uiState.currency,
                 onDismiss = { viewModel.onDismissEditTransaction() },
                 onSave = { amount -> viewModel.onUpdateTransactionAmount(amount) }
             )
@@ -266,6 +270,7 @@ private fun BudgetSummaryCard(
     remainingBudget: Double,
     usagePercent: Float,
     usagePercentDisplay: String,
+    currency: String,
     onEditClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
@@ -320,7 +325,7 @@ private fun BudgetSummaryCard(
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Remaining: ₹${"%.0f".format(remainingBudget).addCommas()}",
+                        text = "Remaining: ${CurrencyUtils.formatAmount(remainingBudget, currency)}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = BrandBlue
@@ -337,7 +342,7 @@ private fun BudgetSummaryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₹${"%.0f".format(totalBudget).addCommas()}",
+                    text = CurrencyUtils.formatAmount(totalBudget, currency),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -512,6 +517,7 @@ private fun CategoryProgressRow(
 private fun TransactionListBottomSheet(
     categoryName: String,
     transactions: List<com.credenceai.app.domain.model.Transaction>,
+    currency: String,
     onDismiss: () -> Unit,
     onEditTransaction: (com.credenceai.app.domain.model.Transaction) -> Unit,
     onDeleteTransaction: (com.credenceai.app.domain.model.Transaction) -> Unit
@@ -579,7 +585,7 @@ private fun TransactionListBottomSheet(
                             }
 
                             Text(
-                                text = "₹${"%.0f".format(tx.amount)}",
+                                text = CurrencyUtils.formatAmount(tx.amount, currency),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary,
@@ -615,6 +621,7 @@ private fun TransactionListBottomSheet(
 @Composable
 private fun AddSpendDialog(
     categoryName: String,
+    currency: String,
     onDismiss: () -> Unit,
     onSave: (Double, String) -> Unit
 ) {
@@ -643,7 +650,7 @@ private fun AddSpendDialog(
                     value = amount,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
                     label = { Text("Amount") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(CurrencyUtils.extractSymbol(currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -701,6 +708,7 @@ private fun AddSpendDialog(
 @Composable
 private fun EditAmountDialog(
     initialAmount: Double,
+    currency: String,
     onDismiss: () -> Unit,
     onSave: (Double) -> Unit
 ) {
@@ -728,7 +736,7 @@ private fun EditAmountDialog(
                     value = amount,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
                     label = { Text("Amount") },
-                    prefix = { Text("₹") },
+                    prefix = { Text(CurrencyUtils.extractSymbol(currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),

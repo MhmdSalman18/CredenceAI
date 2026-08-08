@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.credenceai.app.core.utils.CurrencyUtils
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -289,10 +290,10 @@ private fun TransactionCard(
                     // Amount + date/time
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "${if (transaction.isCredit) "+" else "-"} ₹${
-                                String.format(
-                                    "%.2f",
-                                    Math.abs(transaction.amount)
+                            text = "${if (transaction.isCredit) "+" else "-"} ${
+                                CurrencyUtils.formatAmount(
+                                    Math.abs(transaction.amount),
+                                    uiState.currency
                                 )
                             }",
                             fontWeight = FontWeight.ExtraBold,

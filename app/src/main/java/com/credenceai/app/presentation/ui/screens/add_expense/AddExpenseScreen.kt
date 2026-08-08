@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.credenceai.app.core.utils.CurrencyUtils
 import com.credenceai.app.ui.theme.*
 
 
@@ -204,9 +205,9 @@ fun AddExpenseScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // Rupee symbol
+                        // Currency symbol
                         Text(
-                            "₹",
+                            CurrencyUtils.extractSymbol(uiState.currency),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryBlue,

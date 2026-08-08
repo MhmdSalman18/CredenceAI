@@ -5,6 +5,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.credenceai.app.ui.theme.*
+import com.credenceai.app.core.preferences.PreferencesManager
+import com.credenceai.app.core.utils.CurrencyUtils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
@@ -33,6 +35,7 @@ data class TransactionItem(
     val isUncategorized: Boolean = false,
     val time: String,
     val amount: String,
+    val rawAmount: Double,
     val isCredit: Boolean,
     val icon: ImageVector,
     val iconTint: Color,
@@ -60,7 +63,8 @@ data class HistoryUiState(
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val getAllTransactionsUseCase: GetAllTransactionsUseCase
+    private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -69,8 +73,9 @@ class HistoryViewModel @Inject constructor(
     val uiState: StateFlow<HistoryUiState> = combine(
         getAllTransactionsUseCase(),
         _searchQuery,
-        _activeFilter
-    ) { transactions, query, filter ->
+        _activeFilter,
+        preferencesManager.currency
+    ) { transactions, query, filter, currency ->
         val filteredTransactions = transactions.filter { tx ->
             val matchesQuery = query.isEmpty() ||
                     tx.merchant?.lowercase()?.contains(query.lowercase()) == true ||
@@ -94,7 +99,7 @@ class HistoryViewModel @Inject constructor(
             .map { (date, txs) ->
                 TransactionGroup(
                     dateLabel = date,
-                    transactions = txs.map { it.toUiItem() }
+                    transactions = txs.map { it.toUiItem(currency) }
                 )
             }
 
@@ -137,7 +142,7 @@ class HistoryViewModel @Inject constructor(
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 
-    private fun com.credenceai.app.domain.model.Transaction.toUiItem(): TransactionItem {
+    private fun com.credenceai.app.domain.model.Transaction.toUiItem(currency: String): TransactionItem {
         val isCredit = type.lowercase() == "credit" || type.lowercase() == "income"
         val categoryName = category ?: "UNCATEGORIZED"
         return TransactionItem(
@@ -146,7 +151,8 @@ class HistoryViewModel @Inject constructor(
             category = categoryName.uppercase(),
             isUncategorized = category == null || category.isEmpty(),
             time = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(dateTime)),
-            amount = "${if (isCredit) "+" else "-"} ₹${String.format(Locale.getDefault(), "%.2f", amount)}",
+            amount = "${if (isCredit) "+" else "-"} ${CurrencyUtils.formatAmount(amount, currency)}",
+            rawAmount = amount,
             isCredit = isCredit,
             icon = getIconForCategory(categoryName),
             iconTint = getColorForCategory(categoryName),
