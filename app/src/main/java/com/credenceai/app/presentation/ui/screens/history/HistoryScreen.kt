@@ -162,8 +162,7 @@ fun HistoryScreen(
                             key   = { it.id }
                         ) { tx ->
                             TransactionRow(tx, onClick = {
-                                val cleanAmount = tx.amount.replace("₹", "").replace("+", "").replace("-", "").trim().toDoubleOrNull() ?: 0.0
-                                onEditTransaction(tx.id, cleanAmount, tx.merchantName, tx.timestamp, if(tx.isCredit) "credit" else "debit")
+                                onEditTransaction(tx.id, tx.rawAmount, tx.merchantName, tx.timestamp, if(tx.isCredit) "credit" else "debit")
                             })
                         }
                     }

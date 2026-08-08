@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.credenceai.app.core.utils.CurrencyUtils
 import kotlinx.coroutines.launch
 
 // ─── Brand Colors ─────────────────────────────────────────────────────────────
@@ -198,6 +198,7 @@ fun SmartBudgetIntroScreen(
             } else {
                 ExistingBudgetsContent(
                     budgets = uiState.existingBudgets,
+                    currency = uiState.currency,
                     onViewBudget = onViewBudget,
                     onEditBudget = onEditBudget,
                     onDeleteBudget = { viewModel.deleteBudget(it) },
@@ -280,6 +281,7 @@ private fun EmptyBudgetContent(
 @Composable
 private fun ExistingBudgetsContent(
     budgets: List<ExistingBudgetSummary>,
+    currency: String,
     onViewBudget: (String) -> Unit,
     onEditBudget: (String) -> Unit,
     onDeleteBudget: (String) -> Unit,
@@ -325,6 +327,7 @@ private fun ExistingBudgetsContent(
         budgets.forEach { budget ->
             BudgetSummaryCard(
                 budget = budget,
+                currency = currency,
                 onCardClick = { 
                     onViewBudget(budget.id) 
                 },
@@ -346,6 +349,7 @@ private fun ExistingBudgetsContent(
 @Composable
 private fun BudgetSummaryCard(
     budget: ExistingBudgetSummary,
+    currency: String,
     onCardClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -420,7 +424,7 @@ private fun BudgetSummaryCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "₹${"%,.0f".format(budget.totalBudget)}",
+                        text = CurrencyUtils.formatAmount(budget.totalBudget, currency),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = BrandBlue

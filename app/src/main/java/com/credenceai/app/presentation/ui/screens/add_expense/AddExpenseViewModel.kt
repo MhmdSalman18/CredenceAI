@@ -2,6 +2,7 @@ package com.credenceai.app.presentation.ui.screens.add_expense
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
 import com.credenceai.app.domain.model.Transaction
 import com.credenceai.app.domain.usecase.AddTransactionUseCase
 import com.credenceai.app.domain.usecase.UpdateTransactionUseCase
@@ -9,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.net.URI
@@ -27,7 +29,8 @@ data class AddExpenseUiState(
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
     val transactionType: String = "debit",
-    val id: Int? = null
+    val id: Int? = null,
+    val currency: String = "INR (₹)"
 )
 
 val categories = listOf(
@@ -55,7 +58,8 @@ val paymentModes = listOf(
 @HiltViewModel
 class AddExpenseViewModel @Inject constructor(
     private val addTransactionUseCase: AddTransactionUseCase,
-    private val updateTransactionUseCase: UpdateTransactionUseCase
+    private val updateTransactionUseCase: UpdateTransactionUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddExpenseUiState())
@@ -63,6 +67,15 @@ class AddExpenseViewModel @Inject constructor(
 
     init {
         updateDateTimeString(_uiState.value.timestamp)
+        observeCurrency()
+    }
+
+    private fun observeCurrency() {
+        viewModelScope.launch {
+            preferencesManager.currency.collectLatest { currency ->
+                _uiState.update { it.copy(currency = currency) }
+            }
+        }
     }
 
     private fun updateDateTimeString(timestamp: Long) {

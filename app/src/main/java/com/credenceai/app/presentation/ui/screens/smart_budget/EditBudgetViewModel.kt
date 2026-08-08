@@ -2,6 +2,7 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
 import com.credenceai.app.data.local.entity.BudgetCategoryEntity
 import com.credenceai.app.data.local.entity.BudgetEntity
 import com.credenceai.app.domain.repository.BudgetRepository
@@ -9,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +33,7 @@ data class EditBudgetUiState(
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
     val errorMessage: String? = null,
+    val currency: String = "INR (₹)"
 ) {
     val assignedAmount: Double get() = categories.sumOf { it.allocatedAmount }
     val remainingAmount: Double get() = (totalBudgetAsDouble) - assignedAmount
@@ -50,6 +53,7 @@ private fun defaultCategories() = listOf(
 @HiltViewModel
 class EditBudgetViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
+    private val preferencesManager: PreferencesManager,
     savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
 
@@ -59,6 +63,13 @@ class EditBudgetViewModel @Inject constructor(
     val uiState: StateFlow<EditBudgetUiState> = _uiState.asStateFlow()
 
     init {
+        // Collect currency separately to ensure it's always up-to-date
+        viewModelScope.launch {
+            preferencesManager.currency.collect { currency ->
+                _uiState.update { it.copy(currency = currency) }
+            }
+        }
+
         if (budgetId != "new") {
             _uiState.update { it.copy(budgetId = budgetId) }
             loadExistingBudget()

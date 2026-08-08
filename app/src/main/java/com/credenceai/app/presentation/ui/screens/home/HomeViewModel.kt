@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.credenceai.app.ui.theme.*
+import com.credenceai.app.core.utils.CurrencyUtils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.core.preferences.PreferencesManager
@@ -40,16 +41,17 @@ sealed class HomeEffect {
 
 data class HomeUiState(
     val userName: String               = "User",
-    val netBalance: String             = "₹0.00",
+    val netBalance: String             = "$0.00",
     val changeLabel: String            = "No changes this month",
-    val totalIncome: String            = "₹0.00",
-    val totalSpent: String             = "₹0.00",
+    val totalIncome: String            = "$0.00",
+    val totalSpent: String             = "$0.00",
     val budgetProgress: Float          = 0.0f,
     val categories: List<CategoryItem> = emptyList(),
     val recentTransactions: List<Transaction> = emptyList(),
     val uncategorizedCount: Int        = 0,
     val isLoading: Boolean             = false,
-    val errorMessage: String?          = null
+    val errorMessage: String?          = null,
+    val currency: String               = "INR (₹)"
 )
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
@@ -68,8 +70,9 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         getAllTransactionsUseCase(),
         getUncategorizedTransactionsUseCase(),
-        preferencesManager.userName
-    ) { allTransactions, uncategorized, name ->
+        preferencesManager.userName,
+        preferencesManager.currency
+    ) { allTransactions, uncategorized, name, currency ->
             // Filter out uncategorized transactions and Budget specific transactions for Home Screen summary
             val transactions = allTransactions.filter { it.category != null && it.source != "BUDGET" }
 
@@ -87,7 +90,7 @@ class HomeViewModel @Inject constructor(
                 CategoryItem(
                     id = categoryName.lowercase(),
                     name = categoryName.uppercase(),
-                    amount = "₹%.2f".format(Locale.getDefault(), categoryAmount),
+                    amount = CurrencyUtils.formatAmount(categoryAmount, currency),
                     spendPercent = "%.1f%% of spend".format(Locale.getDefault(), percent),
                     icon = getIconForCategory(categoryName),
                     iconTint = getColorForCategory(categoryName)
@@ -98,14 +101,15 @@ class HomeViewModel @Inject constructor(
 
             HomeUiState(
                 userName = name.split(" ").firstOrNull() ?: "User",
-                netBalance = "₹%.2f".format(Locale.getDefault(), netBalance),
-                totalIncome = "₹%.2f".format(Locale.getDefault(), totalIncome),
-                totalSpent = "₹%.2f".format(Locale.getDefault(), totalSpent),
+                netBalance = CurrencyUtils.formatAmount(netBalance, currency),
+                totalIncome = CurrencyUtils.formatAmount(totalIncome, currency),
+                totalSpent = CurrencyUtils.formatAmount(totalSpent, currency),
                 budgetProgress = if (totalIncome > 0) (totalSpent / totalIncome).toFloat().coerceIn(0f, 1f) else 0f,
-                categories = categories.sortedByDescending { it.amount.replace("₹", "").replace(",", "").toDoubleOrNull() ?: 0.0 },
+                categories = categories.sortedByDescending { it.amount.replace(CurrencyUtils.extractSymbol(currency), "").replace(",", "").toDoubleOrNull() ?: 0.0 },
                 recentTransactions = recent,
                 uncategorizedCount = uncategorized.size,
-                isLoading = false
+                isLoading = false,
+                currency = currency
             )
         }.stateIn(
             scope = viewModelScope,

@@ -1,5 +1,7 @@
 package com.credenceai.app.presentation.ui.screens.analytics
 
+import com.credenceai.app.core.preferences.PreferencesManager
+import com.credenceai.app.core.utils.CurrencyUtils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.credenceai.app.domain.usecase.GetAllTransactionsUseCase
@@ -38,13 +40,13 @@ data class AnalyticsUiState(
     val showUncategorizedBanner: Boolean= false,
 
     // Summary
-    val income: String                  = "₹0.00",
+    val income: String                  = "--",
     val incomeChange: String            = "0% vs last month",
     val incomePositive: Boolean         = true,
-    val expenses: String                = "₹0.00",
+    val expenses: String                = "--",
     val expensesChange: String          = "0% vs last month",
     val expensesPositive: Boolean       = false,
-    val savings: String                 = "₹0.00",
+    val savings: String                 = "--",
     val savingsRate: String             = "0% savings rate",
 
     // Insight
@@ -56,7 +58,7 @@ data class AnalyticsUiState(
     val spendingPoints: List<SpendingPoint> = emptyList(),
 
     // Category breakdown
-    val totalSpendLabel: String         = "₹0.00",
+    val totalSpendLabel: String         = "--",
     val categorySlices: List<CategorySlice> = emptyList(),
 
     // Top merchants
@@ -68,7 +70,8 @@ data class AnalyticsUiState(
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
-    private val getUncategorizedTransactionsUseCase: GetUncategorizedTransactionsUseCase
+    private val getUncategorizedTransactionsUseCase: GetUncategorizedTransactionsUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _selectedPeriod = MutableStateFlow("Current Month")
@@ -78,8 +81,9 @@ class AnalyticsViewModel @Inject constructor(
         getAllTransactionsUseCase(),
         getUncategorizedTransactionsUseCase(),
         _selectedPeriod,
-        _showUncategorizedBanner
-    ) { allTransactions, uncategorized, period, showBanner ->
+        _showUncategorizedBanner,
+        preferencesManager.currency
+    ) { allTransactions, uncategorized, period, showBanner, currency ->
         
         // Filter out uncategorized transactions from the main totals
         val transactions = allTransactions.filter { it.category != null }
@@ -124,7 +128,7 @@ class AnalyticsViewModel @Inject constructor(
         val merchantItems = merchants.map { (name, amt) ->
             MerchantItem(
                 name = name,
-                amount = "₹%.2f".format(Locale.getDefault(), amt),
+                amount = CurrencyUtils.formatAmount(amt, currency),
                 barPercent = (amt / maxMerchantAmt).toFloat(),
                 iconLabel = name.take(1).uppercase()
             )
@@ -146,16 +150,16 @@ class AnalyticsViewModel @Inject constructor(
             selectedPeriod = period,
             uncategorizedCount = uncategorized.size,
             showUncategorizedBanner = showBanner && (uncategorized.isNotEmpty() || true), // Force show for now as requested
-            income = "₹%.2f".format(Locale.getDefault(), totalIncome),
-            expenses = "₹%.2f".format(Locale.getDefault(), totalSpent),
-            savings = "₹%.2f".format(Locale.getDefault(), savings),
+            income = CurrencyUtils.formatAmount(totalIncome, currency),
+            expenses = CurrencyUtils.formatAmount(totalSpent, currency),
+            savings = CurrencyUtils.formatAmount(savings, currency),
             savingsRate = "$savingsRate% savings rate",
-            totalSpendLabel = "₹%.1fk".format(Locale.getDefault(), totalSpent / 1000),
+            totalSpendLabel = "${CurrencyUtils.extractSymbol(currency)}%.1fk".format(Locale.getDefault(), totalSpent / 1000.0),
             categorySlices = slices,
             topMerchants = merchantItems,
             spendingPoints = points,
             insightTitle = if (topCategory != "N/A") "$topCategory is your highest expense" else "No major expenses yet",
-            insightBody = if (topCategory != "N/A") "You've spent ₹%.2f on $topCategory this month.".format(Locale.getDefault(), categoryGroups[topCategory]?.sumOf { it.amount } ?: 0.0) else "Keep tracking to see insights.",
+            insightBody = if (topCategory != "N/A") "You've spent ${CurrencyUtils.formatAmount(categoryGroups[topCategory]?.sumOf { it.amount } ?: 0.0, currency)} on $topCategory this month." else "Keep tracking to see insights.",
             insightAction = "Analyze $topCategory"
         )
     }.stateIn(

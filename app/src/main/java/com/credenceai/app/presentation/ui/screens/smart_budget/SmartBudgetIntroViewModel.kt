@@ -2,11 +2,13 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
 import com.credenceai.app.domain.repository.BudgetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,11 +23,13 @@ data class ExistingBudgetSummary(
 data class SmartBudgetIntroUiState(
     val existingBudgets: List<ExistingBudgetSummary> = emptyList(),
     val isLoading: Boolean = true,
+    val currency: String = "INR (₹)",
 )
 
 @HiltViewModel
 class SmartBudgetIntroViewModel @Inject constructor(
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SmartBudgetIntroUiState())
@@ -37,7 +41,10 @@ class SmartBudgetIntroViewModel @Inject constructor(
 
     private fun loadBudgets() {
         viewModelScope.launch {
-            budgetRepository.getAllBudgets().collect { budgetList ->
+            combine(
+                budgetRepository.getAllBudgets(),
+                preferencesManager.currency
+            ) { budgetList, currency ->
                 val budgets = budgetList.map { budgetWithCats ->
                     ExistingBudgetSummary(
                         id = budgetWithCats.budget.id,
@@ -46,8 +53,14 @@ class SmartBudgetIntroViewModel @Inject constructor(
                         categoryCount = budgetWithCats.categories.size,
                     )
                 }
+                budgets to currency
+            }.collect { (budgets, currency) ->
                 _uiState.update {
-                    it.copy(existingBudgets = budgets, isLoading = false)
+                    it.copy(
+                        existingBudgets = budgets,
+                        isLoading = false,
+                        currency = currency
+                    )
                 }
             }
         }

@@ -2,6 +2,8 @@ package com.credenceai.app.presentation.ui.screens.smart_budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.credenceai.app.core.preferences.PreferencesManager
+import com.credenceai.app.core.utils.CurrencyUtils
 import com.credenceai.app.domain.repository.BudgetRepository
 import com.credenceai.app.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +26,7 @@ data class BudgetCategoryProgress(
     val iconEmoji: String,
     val spentAmount: Double,
     val totalAmount: Double,
+    val currency: String = "INR (₹)"
 ) {
     val remainingAmount: Double get() = totalAmount - spentAmount
     val usagePercent: Float get() = if (totalAmount == 0.0) 0f else (spentAmount / totalAmount).toFloat().coerceIn(0f, 1f)
@@ -32,10 +35,10 @@ data class BudgetCategoryProgress(
         usagePercent >= 0.80f    -> SpendingStatus.WARNING
         else                     -> SpendingStatus.GOOD
     }
-    val spentLabel: String get() = "Spent ₹${"%.0f".format(spentAmount)} of ₹${"%.0f".format(totalAmount)}"
+    val spentLabel: String get() = "Spent ${CurrencyUtils.formatAmount(spentAmount, currency)} of ${CurrencyUtils.formatAmount(totalAmount, currency)}"
     val remainingLabel: String get() = when (status) {
-        SpendingStatus.EXCEEDED  -> "-₹${"%.0f".format(kotlin.math.abs(remainingAmount))}"
-        else                     -> "₹${"%.0f".format(remainingAmount)} left"
+        SpendingStatus.EXCEEDED  -> "-${CurrencyUtils.formatAmount(kotlin.math.abs(remainingAmount), currency)}"
+        else                     -> "${CurrencyUtils.formatAmount(remainingAmount, currency)} left"
     }
 }
 
@@ -53,7 +56,8 @@ data class ViewBudgetUiState(
     val showTransactionList: Boolean = false,
     val selectedCategoryForSpend: BudgetCategoryProgress? = null,
     val selectedTransactionToEdit: com.credenceai.app.domain.model.Transaction? = null,
-    val selectedCategoryTransactions: List<com.credenceai.app.domain.model.Transaction> = emptyList()
+    val selectedCategoryTransactions: List<com.credenceai.app.domain.model.Transaction> = emptyList(),
+    val currency: String = "INR (₹)"
 ) {
     val spentAmount: Double get() = totalBudget - remainingBudget
     val usagePercentDisplay: String get() = "${"%.1f".format(usagePercent * 100)}%"
@@ -65,6 +69,7 @@ data class ViewBudgetUiState(
 class ViewBudgetViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val transactionRepository: TransactionRepository,
+    private val preferencesManager: PreferencesManager,
     savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
 
@@ -105,8 +110,9 @@ class ViewBudgetViewModel @Inject constructor(
 
                 combine(
                     budgetRepository.getBudget(id),
-                    transactionRepository.getTransactionsByDateRange(startOfMonth, endOfMonth)
-                ) { budgetWithCats, transactions ->
+                    transactionRepository.getTransactionsByDateRange(startOfMonth, endOfMonth),
+                    preferencesManager.currency
+                ) { budgetWithCats, transactions, currency ->
                     allTransactions = transactions
                     if (budgetWithCats != null) {
                         // Filter transactions for non-income types
@@ -125,7 +131,8 @@ class ViewBudgetViewModel @Inject constructor(
                                 name = category.name,
                                 iconEmoji = category.iconEmoji,
                                 spentAmount = spentInCategory,
-                                totalAmount = category.allocatedAmount
+                                totalAmount = category.allocatedAmount,
+                                currency = currency
                             )
                         }
 
@@ -140,10 +147,11 @@ class ViewBudgetViewModel @Inject constructor(
                             remainingBudget = remainingBudget,
                             usagePercent = usagePercent,
                             categories = categories,
-                            aiAdvice = generateAiAdvice(spentTotal, totalBudget, categories)
+                            aiAdvice = generateAiAdvice(spentTotal, totalBudget, categories),
+                            currency = currency
                         )
                     } else {
-                        ViewBudgetUiState(isLoading = false)
+                        ViewBudgetUiState(isLoading = false, currency = currency)
                     }
                 }.collect { newState ->
                     _uiState.value = newState
