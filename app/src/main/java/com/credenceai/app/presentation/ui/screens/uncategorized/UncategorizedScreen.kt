@@ -73,6 +73,7 @@ fun UncategorizedScreen(
             items(uiState.transactions, key = { it.id }) { transaction ->
                 TransactionCard(
                     transaction = transaction,
+                    currency = uiState.currency,
                     onCategorySelected = { category ->
                         viewModel.setCategory(transaction.id, category)
                     },
@@ -207,6 +208,7 @@ private fun PendingReviewHeader(count: Int, isAutoSyncActive: Boolean) {
 @Composable
 private fun TransactionCard(
     transaction: Transaction,
+    currency: String,
     onCategorySelected: (TransactionCategory) -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
@@ -293,7 +295,7 @@ private fun TransactionCard(
                             text = "${if (transaction.isCredit) "+" else "-"} ${
                                 CurrencyUtils.formatAmount(
                                     Math.abs(transaction.amount),
-                                    uiState.currency
+                                    currency
                                 )
                             }",
                             fontWeight = FontWeight.ExtraBold,
