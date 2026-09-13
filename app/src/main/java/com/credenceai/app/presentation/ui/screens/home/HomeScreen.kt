@@ -36,6 +36,7 @@ import com.credenceai.app.domain.model.Transaction
 import com.credenceai.app.ui.theme.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.credenceai.app.core.utils.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
