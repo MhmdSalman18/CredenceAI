@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -11,6 +13,13 @@ android {
     namespace = "com.credenceai.app"
     compileSdk = 35
 
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+    val geminiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+
     defaultConfig {
         applicationId = "com.credenceai.app"
         minSdk = 24
@@ -19,14 +28,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
+            // Inherits from defaultConfig
         }
         release {
-            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
