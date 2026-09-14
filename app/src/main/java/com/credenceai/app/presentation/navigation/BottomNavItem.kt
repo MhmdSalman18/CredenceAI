@@ -1,6 +1,7 @@
 package com.credenceai.app.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Insights
@@ -15,6 +16,7 @@ sealed class BottomNavItem(
 ) {
     object Home : BottomNavItem("home", "Dashboard", Icons.Rounded.Dashboard)
     object History : BottomNavItem("history", "History", Icons.Rounded.History)
+    object Crence : BottomNavItem("crence_chat", "Crence", Icons.Rounded.AutoAwesome)
     object Analytics : BottomNavItem("analytics", "Analytics", Icons.Rounded.Insights)
     object Settings : BottomNavItem("settings", "Settings", Icons.Rounded.Settings)
 }
