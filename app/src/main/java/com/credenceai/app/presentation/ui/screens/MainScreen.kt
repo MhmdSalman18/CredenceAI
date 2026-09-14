@@ -1,9 +1,6 @@
 package com.credenceai.app.presentation.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
@@ -29,6 +26,7 @@ import com.credenceai.app.presentation.ui.screens.home.HomeScreen
 import com.credenceai.app.presentation.ui.screens.notifications.NotificationsScreen
 import com.credenceai.app.presentation.ui.screens.settings.SettingsScreen
 import com.credenceai.app.presentation.ui.screens.backup.BackupScreen
+import com.credenceai.app.presentation.ui.screens.crence_chat.CrenceChatScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.EditBudgetScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.SmartBudgetIntroScreen
 import com.credenceai.app.presentation.ui.screens.smart_budget.ViewBudgetScreen
@@ -80,6 +78,7 @@ fun MainScreen(
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.History,
+        BottomNavItem.Crence,
         BottomNavItem.Analytics,
         BottomNavItem.Settings
     )
@@ -87,12 +86,13 @@ fun MainScreen(
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
-    // Only hide bars for full-screen add/edit flows
-    val isAddScreen = currentRoute == ScreenRoutes.AddExpense.route ||
-            currentRoute == ScreenRoutes.AddIncome.route
+    // Only hide bars for full-screen flows
+    val isFullScreen = currentRoute == ScreenRoutes.AddExpense.route ||
+            currentRoute == ScreenRoutes.AddIncome.route ||
+            currentRoute == ScreenRoutes.CrenceChat.route
 
-    val showBottomBar = !isAddScreen
-    val showTopBar = !isAddScreen
+    val showBottomBar = !isFullScreen
+    val showTopBar = !isFullScreen
 
     val topBarTitle = when (currentRoute) {
         BottomNavItem.Home.route -> ""
@@ -110,6 +110,7 @@ fun MainScreen(
     val backgroundColor = MaterialTheme.colorScheme.background
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             if (showTopBar) {
                 TopAppBar(
@@ -170,7 +171,10 @@ fun MainScreen(
         NavHost(
             navController = navController,
             startDestination = startDestination!!,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
 
             composable(ScreenRoutes.Home.route) {
@@ -300,6 +304,10 @@ fun MainScreen(
                         navController.navigate(ScreenRoutes.Backup.route)
                     }
                 )
+            }
+
+            composable(ScreenRoutes.CrenceChat.route) {
+                CrenceChatScreen()
             }
 
             composable(ScreenRoutes.SupportedBanks.route) {
