@@ -22,7 +22,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
+        }
         release {
+            buildConfigField("String", "GEMINI_API_KEY", "\"${project.findProperty("GEMINI_API_KEY") ?: ""}\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -71,6 +75,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.google.generativeai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
