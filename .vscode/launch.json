@@ -1,0 +1,7 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {"name": "Credence AI", "request": "launch", "type": "dart", "program": "lib/main.dart"},
+    {"name": "Credence AI (configured services)", "request": "launch", "type": "dart", "program": "lib/main.dart", "toolArgs": ["--dart-define-from-file=config/local.json"]}
+  ]
+}

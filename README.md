@@ -1,229 +1,70 @@
-# CredenceAI 🪙
+# Credence AI Flutter
 
-**CredenceAI** is a premium, privacy-first personal finance manager for Android. By leveraging on-device intelligence, it automatically intercepts and parses financial notification streams (from UPI apps, digital wallets, and bank SMS alerts) to log expenses in real time, eliminating the high friction and abandonment rates of manual logging.
+A Flutter recreation of the CredenceAI Jetpack Compose Android application, organized for maintainable feature development. The Compose source remains in its original project folder.
 
----
+## Run in VS Code
 
-<p align="center">
-  <img src="app/src/main/res/drawable/credenceai_icon.png" width="128" height="128" alt="CredenceAI Icon" />
-</p>
+Install the recommended Flutter extension, open this folder and select an Android emulator or phone. Run:
 
-<p align="center">
-  <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF.svg?style=for-the-badge&logo=kotlin" alt="Kotlin" /></a>
-  <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack_Compose-1.7.5-4285F4.svg?style=for-the-badge&logo=jetpackcompose" alt="Jetpack Compose" /></a>
-  <a href="https://dagger.dev/hilt/"><img src="https://img.shields.io/badge/Dagger_Hilt-2.59.2-00bcd4.svg?style=for-the-badge&logo=dagger" alt="Hilt" /></a>
-  <a href="https://developer.android.com/training/data-storage/room"><img src="https://img.shields.io/badge/Room_DB-2.7.0--alpha11-3DDC84.svg?style=for-the-badge&logo=android" alt="Room" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License" /></a>
-</p>
-
----
-
-## 📖 Table of Contents
-
-- [🚀 Product Vision](#-product-vision)
-- [✨ Core Capabilities](#-core-capabilities)
-- [🏗️ Architectural Architecture & Principles](#-architectural-architecture--principles)
-- [🛠️ Technical Stack & Tooling](#%EF%B8%8F-technical-stack--tooling)
-- [🧬 Smart Notification Parsing Engine](#-smart-notification-parsing-engine)
-- [📂 Project Package Mapping](#-project-package-mapping)
-- [🚀 Quick Start & Build Configuration](#-quick-start--build-configuration)
-- [📈 Future Roadmap](#-future-roadmap)
-- [🤝 Let's Connect](#-lets-connect)
-
----
-
-## 🚀 Product Vision
-
-Over 90% of users abandon personal finance tracking apps within the first month due to "input fatigue." **CredenceAI** solves this friction entirely. It acts as an autonomous background listener that maps incoming notification texts to a single-source-of-truth Room database. 
-
-- **Zero-Touch Expense Logging:** Real-time background parser of UPI platforms (Google Pay, PhonePe, Paytm), retail wallet notifications, and official bank SMS feeds.
-- **Strictly Local & Offline:** To ensure absolute privacy, there are no remote servers. All text analysis, categorizations, and database updates occur directly on the device.
-- **Smart Budget Planning:** Allocates monthly financial targets dynamically, showing clear progress indicators, alerts, and categorizations.
-
----
-
-## ✨ Core Capabilities
-
-*   **Background Ingestion Pipeline:** Uses a lightweight `NotificationListenerService` that filters out system notification noise, ensuring minimum wake-ups and maximum battery optimization.
-*   **Indian Fintech Ecosystem Support:** Built-in multi-pass Regex engine optimized for the unique formatting patterns of Indian payment services and banking alerts.
-*   **Interactive Financial Dashboard:** Combines Month Summary metrics (Income vs. Spent) with a fluid, visual progress representation of monthly budget allocation.
-*   **Flexible CSV Export:** Compiles database transactions and generates standard CSV reports to share or backup for external audits.
-*   **Secure Settings Management:** Integrated preferences for app theme, language customizers, backup & restore configurations, app locks, and tracking controls via Jetpack DataStore.
-
----
-
-## 🏗️ Architectural Architecture & Principles
-
-CredenceAI is constructed using **Clean Architecture** patterns combined with a reactive unidirectional data flow (UDF) using Jetpack Compose and **MVI/MVVM** state management.
-
-### Architecture Layer Overview
-
-```mermaid
-graph TD
-    %% Ingress & Services
-    Notification[Payment App / SMS Notification] -->|Listens| Service[NotificationListenerService]
-    Service -->|Triggers| AddTxnUseCase[AddTransactionUseCase]
-
-    %% Presentation Layer
-    ComposeUI[Jetpack Compose Screens] -->|Events| ViewModel[StateFlow ViewModels]
-    ViewModel -->|State Updates| ComposeUI
-
-    %% Use Cases
-    ViewModel -->|Invokes| UseCases[Domain Use Cases]
-    AddTxnUseCase -->|Invokes| UseCases
-
-    %% Domain Repositories
-    UseCases -->|Interacts| Repositories[Domain Repository Interfaces]
-
-    %% Data Implementation Layer
-    Repositories -->|Implemented By| DataRepositories[Data Repository Implementations]
-    DataRepositories -->|Persists| SQLite[Room Database SQLite]
-    DataRepositories -->|Reads/Writes| Preferences[Jetpack DataStore Preferences]
-
-    classDef presentation fill:#4285F4,stroke:#333,stroke-width:2px,color:#fff;
-    classDef domain fill:#3DDC84,stroke:#333,stroke-width:2px,color:#000;
-    classDef data fill:#7F52FF,stroke:#333,stroke-width:2px,color:#fff;
-    classDef ingress fill:#FFB900,stroke:#333,stroke-width:2px,color:#000;
-
-    class ComposeUI,ViewModel presentation;
-    class UseCases,Repositories domain;
-    class DataRepositories,SQLite,Preferences data;
-    class Notification,Service ingress;
+```powershell
+flutter pub get
+flutter run
 ```
 
-### Architectural Pillars:
-- **Presentation Layer (100% Compose):** Uses ViewModels emitting immutable state objects (`StateFlow`). State flows down, events flow up. Lifecycle-aware collection ensures zero database connections leak when the app backgrounded.
-- **Domain Layer:** Pure Kotlin implementation containing model representations (`Transaction`, `Budget`) and business Use Cases. Totally isolated from Android SDK dependencies to guarantee unit-testability.
-- **Data Layer:** The structural layer that handles database schemas, DAOs, reactive configuration mappings, preference serialization, and the local Room implementation.
+Or press **F5** using the **Credence AI** launch configuration. Windows preview is included; enable Windows Developer Mode for native plugin symbolic links. Notification tracking and Google cloud sign-in require Android. Web/iOS targets are not included.
 
----
+## Features
 
-## 🛠️ Technical Stack & Tooling
+- Dashboard with monthly income, expenses, balance, recent activity and categories.
+- Add, edit and delete transactions, including date/time, category, notes and payment method.
+- Search and filter history, review uncategorized records, and export CSV.
+- Monthly budgets, precise category allocation, recurring limits and progress.
+- Monthly analytics with category and daily-spending charts.
+- Profile, dark theme, currency-separated totals, hidden balance and device authentication.
+- Android bank/payment notification detection with a persistent native inbox and idempotent import.
+- Encrypted local backup/restore; Firebase and Google Drive adapters after configuration.
+- Crence chat with an authenticated backend adapter and included Node service. Live AI requires service configuration and deployment.
 
-| Technology | Reference Version | Role in Project |
-| :--- | :--- | :--- |
-| **Kotlin** | `2.1.0` | Core programming language with JVM Toolchain version 17. |
-| **Jetpack Compose** | `BOM 2024.12.01` | Dynamic UI elements with standard Material3 themes. |
-| **Dagger Hilt** | `2.59.2` | Clean dependency injection container with Jetpack Navigation integration. |
-| **Room DB** | `2.7.0-alpha11` | Local structured SQLite database management compiled with Google KSP. |
-| **Jetpack DataStore** | `1.1.2` | Reactive transactional settings/preferences management. |
-| **Timber** | `5.0.1` | Automated, utility-based debugger logs. |
-| **Gradle (Kotlin DSL)** | `9.1.0 (AGP)` | Modern build management and dependency catalogs. |
+The app starts with no sample financial data. Existing Compose app data is not automatically migrated. Compose binary database backups are not compatible with the Flutter backup format. Settings that existed only as nonfunctional toggles in the original are not presented as working features here.
 
----
-
-## 🧬 Smart Notification Parsing Engine
-
-The core utility of the ingestion framework lies in the `TransactionNotificationListener`. It registers package filters to avoid consuming unnecessary processor cycles and handles standard transaction messages using state-of-the-art rules:
-
-1. **Package Validation:** Monitors specific financial applications (e.g., Google Pay, PhonePe, BHIM, Paytm, CRED) or system SMS messengers.
-2. **Title Pattern Identification:** Matches incoming notification handles against registered VM-XXXXX and AX-XXXXX Indian TRAI bank alphanumeric sender codes.
-3. **Keyword Parsing Hierarchy:**
-   - **Debits:** Matches patterns containing `debited`, `spent`, `withdrawn`, `payment of`, `you paid`, or `you sent`.
-   - **Credits:** Matches patterns containing `credited`, `received`, `cashback`, `deposited`, or `transferred to you`.
-   - **Spam Filtering:** Drops OTP alerts, password reminders, login validations, and standard discount/offer promotions instantly.
-4. **Amount Extraction Regex:**
-   ```kotlin
-   // Captures ₹1,250.00, INR 500, Rs. 200, etc.
-   val AMOUNT_REGEX = Regex(
-       """(?:₹|Rs\.?\s*|INR\s*)([\d,]+(?:\.\d{1,2})?)""",
-       RegexOption.IGNORE_CASE
-   )
-   ```
-
-### Supported Financial Packages
-
-| UPI / Payments Apps | Supporting Bank Apps | SMS Sender Formats |
-| :--- | :--- | :--- |
-| Google Pay (`com.google.android.apps.nbu.paisa.user`) | HDFC Bank MobileBanking (`com.snapwork.hdfc`) | `HDFCBK` |
-| PhonePe (`com.phonepe.app`) | ICICI iMobile (`com.csam.icici.bank.imobile`) | `ICICIB` |
-| BHIM UPI (`in.org.npci.upiapp`) | SBI YONO (`com.sbi.SBIFreedomPlus`) | `SBIINB` |
-| CRED (`com.dreamplug.androidapp`) | Kotak Mahindra Mobile (`com.msf.kbank.mobile`) | `KOTAKB` |
-| Paytm (`net.one97.paytm`) | Axis Mobile (`com.axis.mobile`) | `AXISBK` |
-
----
-
-## 📂 Project Package Mapping
+## Code structure
 
 ```text
-com.credenceai.app
- ├── core                  # Common preferences, utility managers, data exporters
- ├── data
- │    ├── local            # Room Database, Category/Transaction Entities, and DAOs
- │    ├── mapper           # DTO to domain model converters
- │    ├── notification     # Background NotificationListenerService & Regex Engine
- │    └── repository       # Concrete repository implementations mapping DB access
- ├── di                    # Hilt modules injecting Database, Preference, and UseCase modules
- ├── domain
- │    ├── model            # Pure model definitions (Transaction, Budget)
- │    ├── repository       # Abstract repository interfaces for testing isolation
- │    └── usecase          # Individual class-based business logics (AddTransaction, Export, etc.)
- └── presentation
-      ├── navigation       # Dynamic routing definitions & Compose NavGraph configurations
-      ├── state            # UI State representations
-      └── ui
-           ├── components  # Custom UI cards, sliders, and progress loaders
-           ├── screens     # Jetpack Compose layouts (HomeScreen, SettingsScreen, EditBudgetScreen)
-           └── theme       # Brand palettes, font typographies, and color systems
+lib/
+  app/                  App shell, routing and lifecycle
+  core/                 Shared configuration, storage, money, theme and widgets
+  features/
+    transactions/       Domain, repository, controller and screens
+    budgets/            Domain, repository, controller and screens
+    dashboard/          Monthly overview
+    analytics/          Calculations and charts
+    notifications/      Flutter-to-Android adapter
+    settings/           Preferences and privacy
+    backup/             Export, encryption, restore and cloud adapters
+    chat/               Conversation state and authenticated HTTP client
+android/app/src/main/kotlin/.../notifications/
+                        Native parser, background service and durable inbox
+server/                 Firebase-authenticated Gemini proxy
+config/                 Example local build configuration
+firebase/               Example owner-scoped Storage rules
 ```
 
----
+Flutter + Riverpod + GoRouter; SQLite repositories behind domain interfaces; integer minor units for money. Encryption uses AES-256-GCM and PBKDF2. No Gemini API secret is embedded in the application.
 
-## 🚀 Quick Start & Build Configuration
+## Quality checks
 
-To run the application locally or contribute changes, follow these guidelines:
-
-### 1. Requirements
-*   Android Studio Ladybug (2024.2.1) or newer
-*   Android SDK Platform version 35 (API 35)
-*   Java Development Kit (JDK) 17
-
-### 2. Standard Repository Clone
-```bash
-git clone https://github.com/mhmds18/CredenceAI.git
-cd CredenceAI
+```powershell
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test
+flutter build apk --debug
 ```
 
-### 3. Build & Compile Setup
-1. **Firebase Configuration:** Since this project uses Firebase for backups and authentication, you need to add your own `google-services.json` file to the `app/` directory. You can obtain this from the [Firebase Console](https://console.firebase.google.com/).
-2. Open the root directory in Android Studio. Ensure that Gradle utilizes **JDK 17** for compiling the dependency graph.
-3. Build a debug package directly from the Android Studio dashboard or via the shell terminal:
-```bash
-./gradlew assembleDebug
-```
+Run `./gradlew testDebugUnitTest` inside `android` for parser tests and `npm test` inside `server` for request validation tests. The included CI workflow runs these checks. Release signing must be configured explicitly; release builds never fall back to the debug key.
 
-### 4. ⚠️ CRITICAL: Enabling Notification Permissions
-Because Android sandbox protocols enforce strict permissions on notifications, background parsing requires manual authorization on the target device:
-1. Compile and install the app on your physical device.
-2. Go to **Settings** > **Apps** > **Special App Access** (sometimes located under advanced options).
-3. Select **Notification Access** (or **Device & app notifications**).
-4. Find **CredenceAI** in the list and toggle the permissions switch to **Allowed**.
+## Documentation
 
----
+- [Development, services, signing and manual acceptance](docs/SETUP.md)
+- [Architecture, data flow, backup format and security limits](docs/ARCHITECTURE.md)
 
-[//]: # (## 📈 Future Roadmap)
-
-[//]: # ()
-[//]: # (- [ ] **On-Device NLP ML Engine:** Moving away from standard Regex parsing towards a localized Natural Language Processing &#40;NLP&#41; model to classify custom merchant formats.)
-
-[//]: # (- [ ] **Dynamic Analytics Dashboard:** Interactive pie-charts and expense-over-time lines drawn directly on a Jetpack Compose Canvas.)
-
-[//]: # (- [ ] **Multi-currency Converter:** Integrated conversion APIs for multi-country billing transactions.)
-
-[//]: # (- [ ] **Automated Google Drive Backup:** Encrypted transaction backup configurations to secure user data directories.)
-
-[//]: # ()
-[//]: # (---)
-
-[//]: # (## 🤝 Let's Connect)
-
-[//]: # ()
-[//]: # ()
-[//]: # (*   **LinkedIn:** [Muhammed Salman]&#40;https://www.linkedin.com/in/mhmds/&#41;)
-
-[//]: # (*   **Portfolio:** [mhmds.github.io]&#40;https://mhmds.github.io/&#41;)
-
-[//]: # (*   **GitHub Repository:** [CredenceAI]&#40;https://github.com/MhmdSalman18/CredenceAI&#41;)
-
-[//]: # ()
-[//]: # (---)
+Cloud account integration, paid-service configuration, deploying the backend/rules and release publishing are separate setup steps. Nothing has been deployed or published.
